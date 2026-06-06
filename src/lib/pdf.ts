@@ -89,9 +89,9 @@ export function gerarPDF(insp: Inspecao) {
   });
 
   if (ncRows.length) {
+    const lastY = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y;
     autoTable(doc, {
-      // @ts-expect-error - lastAutoTable is added by autoTable
-      startY: (doc as any).lastAutoTable.finalY + 16,
+      startY: lastY + 16,
       head: [["Item", "Seção", "Não Conformidade"]],
       body: ncRows,
       headStyles: { fillColor: [200, 50, 50], textColor: 255 },
