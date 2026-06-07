@@ -157,7 +157,7 @@ function ApendiceA({ insp, persist, totalItems }: { insp: Inspecao; persist: (u:
     <Accordion type="multiple" defaultValue={[checklistSections[0].id]} className="space-y-3">
       {checklistSections.map((sec) => {
         const total = sec.items.length;
-        const done = sec.items.filter((it) => insp.respostas[it.id] != null).length;
+        const done = sec.items.filter((it) => insp.respostas?.[it.id] != null).length;
         return (
           <AccordionItem key={sec.id} value={sec.id} className="overflow-hidden rounded-lg border bg-card">
             <AccordionTrigger className="bg-primary px-4 py-3 text-left text-primary-foreground hover:no-underline">
