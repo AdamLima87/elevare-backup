@@ -298,114 +298,119 @@ function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
   const removeFunc = (idx: number) =>
     persist((i) => ({ ...i, dados: { ...i.dados, funcionarios: (i.dados?.funcionarios || []).filter((_: any, k: number) => k !== idx) } }));
 
-  return (
-    <div className="space-y-4">
-      <Card className="p-4">
-          <h2 className="text-base font-bold mb-4">Dados do Responsável / Estabelecimento</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <SelectField label="1. Receptividade" value={q.receptividade} onChange={(v) => setQ("receptividade", v)} options={["Elevada", "Média", "Baixa"]} />
-            <SelectField label="2. Número de trabalhadores" value={q.numTrabalhadores} onChange={(v) => setQ("numTrabalhadores", v)} options={["1-5", "6-10", "11-20", "21-50", "Mais de 50"]} />
-            <TextField label="3. Refeições oferecidas por período" value={q.refeicoesPeriodo} onChange={(v) => setQ("refeicoesPeriodo", v)} />
-            <TextField label="4. Alimentos predominantes no cardápio" value={q.alimentosCardapio} onChange={(v) => setQ("alimentosCardapio", v)} className="sm:col-span-2" />
-            <SelectField label="5. Instruções aos funcionários" value={q.instrucoesFuncionarios} onChange={(v) => setQ("instrucoesFuncionarios", v)} options={["Sim", "Não"]} />
-            <TextField label="5.1 Qual?" value={q.instrucoesQual} onChange={(v) => setQ("instrucoesQual", v)} />
-            <SelectField label="6. Cursos e treinamentos (frequência)" value={q.cursosTreinamentos} onChange={(v) => setQ("cursosTreinamentos", v)} options={["Nunca", "Anual", "Semestral", "Trimestral", "Mensal"]} />
-            <SelectField label="7. Avaliação pós-treinamento" value={q.avaliacaoPos} onChange={(v) => setQ("avaliacaoPos", v)} options={["Sim", "Não"]} />
-            <SelectField label="8. Fornecimento de uniforme (frequência)" value={q.fornecimentoUniformeFreq} onChange={(v) => setQ("fornecimentoUniformeFreq", v)} options={["Nunca", "Anual", "Semestral", "Trimestral", "Mensal"]} />
-            <div className="sm:col-span-2">
-              <Label className="mb-2 block text-xs font-medium text-muted-foreground">8.1 Itens fornecidos</Label>
-              <div className="flex flex-wrap gap-3">
-                {UNIFORME_ITENS.map((it) => (
-                  <label key={it} className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={q.uniformeItens.includes(it)} onCheckedChange={() => toggleUniforme(it)} />
-                    {it}
-                  </label>
-                ))}
+  try {
+    return (
+      <div className="space-y-4">
+        <Card className="p-4">
+            <h2 className="text-base font-bold mb-4">Dados do Responsável / Estabelecimento</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <SelectField label="1. Receptividade" value={q.receptividade} onChange={(v) => setQ("receptividade", v)} options={["Elevada", "Média", "Baixa"]} />
+              <SelectField label="2. Número de trabalhadores" value={q.numTrabalhadores} onChange={(v) => setQ("numTrabalhadores", v)} options={["1-5", "6-10", "11-20", "21-50", "Mais de 50"]} />
+              <TextField label="3. Refeições oferecidas por período" value={q.refeicoesPeriodo} onChange={(v) => setQ("refeicoesPeriodo", v)} />
+              <TextField label="4. Alimentos predominantes no cardápio" value={q.alimentosCardapio} onChange={(v) => setQ("alimentosCardapio", v)} className="sm:col-span-2" />
+              <SelectField label="5. Instruções aos funcionários" value={q.instrucoesFuncionarios} onChange={(v) => setQ("instrucoesFuncionarios", v)} options={["Sim", "Não"]} />
+              <TextField label="5.1 Qual?" value={q.instrucoesQual} onChange={(v) => setQ("instrucoesQual", v)} />
+              <SelectField label="6. Cursos e treinamentos (frequência)" value={q.cursosTreinamentos} onChange={(v) => setQ("cursosTreinamentos", v)} options={["Nunca", "Anual", "Semestral", "Trimestral", "Mensal"]} />
+              <SelectField label="7. Avaliação pós-treinamento" value={q.avaliacaoPos} onChange={(v) => setQ("avaliacaoPos", v)} options={["Sim", "Não"]} />
+              <SelectField label="8. Fornecimento de uniforme (frequência)" value={q.fornecimentoUniformeFreq} onChange={(v) => setQ("fornecimentoUniformeFreq", v)} options={["Nunca", "Anual", "Semestral", "Trimestral", "Mensal"]} />
+              <div className="sm:col-span-2">
+                <Label className="mb-2 block text-xs font-medium text-muted-foreground">8.1 Itens fornecidos</Label>
+                <div className="flex flex-wrap gap-3">
+                  {UNIFORME_ITENS.map((it) => (
+                    <label key={it} className="flex items-center gap-2 text-sm">
+                      <Checkbox checked={q.uniformeItens.includes(it)} onCheckedChange={() => toggleUniforme(it)} />
+                      {it}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <SelectField label="9. Remuneração por comissão" value={q.comissao} onChange={(v) => setQ("comissao", v)} options={["Sim", "Não"]} />
+              <div className="sm:col-span-2">
+                <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">10. Alterações desejadas no estabelecimento</Label>
+                <Textarea rows={3} value={q.alteracoesDesejadas} onChange={(e) => setQ("alteracoesDesejadas", e.target.value)} />
               </div>
             </div>
-            <SelectField label="9. Remuneração por comissão" value={q.comissao} onChange={(v) => setQ("comissao", v)} options={["Sim", "Não"]} />
-            <div className="sm:col-span-2">
-              <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">10. Alterações desejadas no estabelecimento</Label>
-              <Textarea rows={3} value={q.alteracoesDesejadas} onChange={(e) => setQ("alteracoesDesejadas", e.target.value)} />
-            </div>
-          </div>
-      </Card>
+        </Card>
 
-      <Card className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold">Dados dos Funcionários</h2>
-          <Button size="sm" variant="secondary" onClick={addFunc} className="gap-1">
-            <Plus className="h-4 w-4" /> Adicionar
-          </Button>
-        </div>
-        <div className="space-y-3">
-          {insp.dados?.funcionarios?.length === 0 && (
-            <p className="text-sm text-muted-foreground">Nenhum funcionário cadastrado.</p>
-          )}
-          <Accordion type="multiple" className="space-y-2">
-            {insp.dados?.funcionarios?.map((f: Funcionario, idx: number) => (
-              <AccordionItem key={idx} value={`f-${idx}`} className="rounded-lg border bg-background">
-                <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                  <span className="text-sm font-medium">
-                    {f.nome || `Funcionário ${idx + 1}`}
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="space-y-4 px-4 pb-4">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <TextField label="Nome" value={f.nome} onChange={(v) => updateFunc(idx, { nome: v })} />
-                    <TextField label="Idade" value={f.idade} onChange={(v) => updateFunc(idx, { idade: v })} />
-                    <SelectField
-                      label="Escolaridade"
-                      value={f.escolaridade}
-                      onChange={(v) => updateFunc(idx, { escolaridade: v })}
-                      options={[
-                        "A - Analfabeto",
-                        "B - Fundamental incompleto",
-                        "C - Fundamental completo",
-                        "D - Médio incompleto",
-                        "E - Médio completo",
-                        "F - Superior",
-                      ]}
-                    />
-                    <SelectField label="Carteira assinada" value={f.carteiraAssinada} onChange={(v) => updateFunc(idx, { carteiraAssinada: v })} options={["Sim", "Não"]} />
-                    <TextField label="Renda" value={f.renda} onChange={(v) => updateFunc(idx, { renda: v })} />
-                    <TextField label="Banhos diários" value={f.banhosDiarios} onChange={(v) => updateFunc(idx, { banhosDiarios: v })} />
-                    <SelectField label="Casa própria" value={f.casaPropria} onChange={(v) => updateFunc(idx, { casaPropria: v })} options={["Sim", "Não"]} />
-                    <TextField label="Nº de cômodos" value={f.numComodos} onChange={(v) => updateFunc(idx, { numComodos: v })} />
-                    <SelectField label="Curso de Boas Práticas (BMP)" value={f.cursoBMP} onChange={(v) => updateFunc(idx, { cursoBMP: v })} options={["Sim", "Não"]} />
-                    <div className="space-y-3 border-t pt-3">
-                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Questionário (12–26)
-                      </div>
-                      {PERG_FUNCIONARIO.map((p) => (
-                        <div key={p.k}>
-                          <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">{p.t}</Label>
-                          <Textarea
-                            rows={2}
-                            value={f.respostas?.[p.k] || ""}
-                            onChange={(e) => {
-                              const newRespostas = { ...(f.respostas || {}), [p.k]: e.target.value };
-                              updateFunc(idx, { respostas: newRespostas });
-                            }}
-                            className="text-sm"
-                          />
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold">Dados dos Funcionários</h2>
+            <Button size="sm" variant="secondary" onClick={addFunc} className="gap-1">
+              <Plus className="h-4 w-4" /> Adicionar
+            </Button>
+          </div>
+          <div className="space-y-3">
+            {insp.dados?.funcionarios?.length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhum funcionário cadastrado.</p>
+            )}
+            <Accordion type="multiple" className="space-y-2">
+              {insp.dados?.funcionarios?.map((f: Funcionario, idx: number) => (
+                <AccordionItem key={idx} value={`f-${idx}`} className="rounded-lg border bg-background">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                    <span className="text-sm font-medium">
+                      {f.nome || `Funcionário ${idx + 1}`}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 px-4 pb-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <TextField label="Nome" value={f.nome} onChange={(v) => updateFunc(idx, { nome: v })} />
+                      <TextField label="Idade" value={f.idade} onChange={(v) => updateFunc(idx, { idade: v })} />
+                      <SelectField
+                        label="Escolaridade"
+                        value={f.escolaridade}
+                        onChange={(v) => updateFunc(idx, { escolaridade: v })}
+                        options={[
+                          "A - Analfabeto",
+                          "B - Fundamental incompleto",
+                          "C - Fundamental completo",
+                          "D - Médio incompleto",
+                          "E - Médio completo",
+                          "F - Superior",
+                        ]}
+                      />
+                      <SelectField label="Carteira assinada" value={f.carteiraAssinada} onChange={(v) => updateFunc(idx, { carteiraAssinada: v })} options={["Sim", "Não"]} />
+                      <TextField label="Renda" value={f.renda} onChange={(v) => updateFunc(idx, { renda: v })} />
+                      <TextField label="Banhos diários" value={f.banhosDiarios} onChange={(v) => updateFunc(idx, { banhosDiarios: v })} />
+                      <SelectField label="Casa própria" value={f.casaPropria} onChange={(v) => updateFunc(idx, { casaPropria: v })} options={["Sim", "Não"]} />
+                      <TextField label="Nº de cômodos" value={f.numComodos} onChange={(v) => updateFunc(idx, { numComodos: v })} />
+                      <SelectField label="Curso de Boas Práticas (BMP)" value={f.cursoBMP} onChange={(v) => updateFunc(idx, { cursoBMP: v })} options={["Sim", "Não"]} />
+                      <div className="space-y-3 border-t pt-3">
+                        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Questionário (12–26)
                         </div>
-                      ))}
+                        {PERG_FUNCIONARIO.map((p) => (
+                          <div key={p.k}>
+                            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">{p.t}</Label>
+                            <Textarea
+                              rows={2}
+                              value={f.respostas?.[p.k] || ""}
+                              onChange={(e) => {
+                                const newRespostas = { ...(f.respostas || {}), [p.k]: e.target.value };
+                                updateFunc(idx, { respostas: newRespostas });
+                              }}
+                              className="text-sm"
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex justify-end pt-2">
-                    <Button variant="ghost" size="sm" onClick={() => removeFunc(idx)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                      <Trash2 className="h-4 w-4 mr-2" /> Remover Funcionário
-                    </Button>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-      </Card>
-    </div>
-  );
+                    <div className="flex justify-end pt-2">
+                      <Button variant="ghost" size="sm" onClick={() => removeFunc(idx)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                        <Trash2 className="h-4 w-4 mr-2" /> Remover Funcionário
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </Card>
+      </div>
+    );
+  } catch (err) {
+    console.error("Erro na renderização do Apêndice B:", err);
+    return <div className="p-4 border rounded bg-destructive/10 text-destructive text-sm font-medium">Erro ao carregar questionário (Apêndice B).</div>;
+  }
 }
 
 function TextField({ label, value, onChange, className }: { label: string; value: string; onChange: (v: string) => void; className?: string }) {
