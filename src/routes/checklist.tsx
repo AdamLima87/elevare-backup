@@ -41,7 +41,7 @@ function ChecklistPage() {
     try {
       let r = loadRascunho();
       if (!r) {
-        // Se não houver rascunho, redireciona para o início
+        toast.error("Preencha os dados do estabelecimento para iniciar.");
         navigate({ to: "/" });
         return;
       }
@@ -51,39 +51,26 @@ function ChecklistPage() {
       toast.error("Erro ao carregar dados.");
       navigate({ to: "/" });
     }
-  }, []);
+  }, [navigate]);
 
   if (!insp) return null;
 
   const persist = (updater: (i: Inspecao) => Inspecao) => {
-    setInsp((cur) => {
-      if (!cur) return cur;
-      const next = updater(cur);
-      const stats = calcularPercentual(next.respostas || {});
-      const totalAnswers = Object.keys(next.respostas || {}).length;
-      next.progresso = Math.round((totalAnswers / totalChecklistItems) * 100);
-      saveRascunho(next);
-      saveToHistorico(next);
-      return next;
-    });
+    try {
+      setInsp((cur) => {
+        if (!cur) return cur;
+        const next = updater(cur);
+        const totalAnswers = Object.keys(next.respostas || {}).length;
+        next.progresso = Math.round((totalAnswers / totalChecklistItems) * 100);
+        saveRascunho(next);
+        saveToHistorico(next);
+        return next;
+      });
+    } catch (error) {
+      console.error("Erro ao persistir dados:", error);
+      toast.error("Erro ao salvar dados.");
+    }
   };
-
-  if (!insp?.dados?.estabelecimento?.razaoSocial) {
-    return (
-      <AppShell>
-        <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-          <Card className="p-6 text-center max-w-md w-full">
-            <p className="text-sm text-muted-foreground mb-4">Os dados desta inspeção não foram encontrados ou estão incompletos.</p>
-            <Link to="/">
-              <Button className="w-full">
-                Ir para identificação
-              </Button>
-            </Link>
-          </Card>
-        </div>
-      </AppShell>
-    );
-  }
 
   const respondidos = Object.values(insp.respostas || {}).filter((r) => r !== null && r !== undefined).length;
   const progresso = Math.round((respondidos / totalChecklistItems) * 100);
@@ -96,42 +83,55 @@ function ChecklistPage() {
     navigate({ to: "/resultado" });
   };
 
-  return (
-    <AppShell>
-      <Toaster richColors position="top-center" />
-      <div className="mb-4">
-        <div className="text-xs uppercase tracking-wider text-muted-foreground">Inspeção</div>
-        <h1 className="text-xl font-semibold">{insp.estabelecimento || insp.dados?.estabelecimento?.nomeFantasia || "Sem nome"}</h1>
-        <div className="mt-3 flex items-center gap-3">
-          <Progress value={progresso} className="h-2 flex-1" />
-          <span className="text-xs font-medium text-muted-foreground">
-            {respondidos}/{totalChecklistItems} ({progresso}%)
-          </span>
+  try {
+    return (
+      <AppShell>
+        <Toaster richColors position="top-center" />
+        <div className="mb-4">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Inspeção</div>
+          <h1 className="text-xl font-semibold">{insp.estabelecimento || insp.dados?.estabelecimento?.nomeFantasia || "Sem nome"}</h1>
+          <div className="mt-3 flex items-center gap-3">
+            <Progress value={progresso} className="h-2 flex-1" />
+            <span className="text-xs font-medium text-muted-foreground">
+              {respondidos}/{totalChecklistItems} ({progresso}%)
+            </span>
+          </div>
         </div>
-      </div>
 
-      <Tabs defaultValue="a">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="a">Apêndice A — Verificação</TabsTrigger>
-          <TabsTrigger value="b">Apêndice B — Questionário</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="a">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="a">Apêndice A — Verificação</TabsTrigger>
+            <TabsTrigger value="b">Apêndice B — Questionário</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="a" className="mt-4">
-          <ApendiceA insp={insp} persist={persist} totalItems={totalChecklistItems} />
-        </TabsContent>
+          <TabsContent value="a" className="mt-4">
+            <ApendiceA insp={insp} persist={persist} totalItems={totalChecklistItems} />
+          </TabsContent>
 
-        <TabsContent value="b" className="mt-4">
-          <ApendiceB insp={insp} persist={persist} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="b" className="mt-4">
+            <ApendiceB insp={insp} persist={persist} />
+          </TabsContent>
+        </Tabs>
 
-      <div className="mt-6 flex justify-end">
-        <Button size="lg" onClick={finalizar} className="gap-2">
-          Finalizar e ver resultado <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </AppShell>
-  );
+        <div className="mt-6 flex justify-end">
+          <Button size="lg" onClick={finalizar} className="gap-2">
+            Finalizar e ver resultado <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </AppShell>
+    );
+  } catch (renderError) {
+    console.error("Erro crítico de renderização no ChecklistPage:", renderError);
+    return (
+      <AppShell>
+        <div className="p-8 text-center">
+          <h2 className="text-xl font-bold text-destructive">Erro ao carregar o checklist</h2>
+          <p className="mt-2 text-muted-foreground">Ocorreu um erro interno ao renderizar os dados.</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">Recarregar página</Button>
+        </div>
+      </AppShell>
+    );
+  }
 }
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
