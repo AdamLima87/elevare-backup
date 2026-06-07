@@ -68,7 +68,7 @@ export interface Inspecao {
 const HISTORICO_KEY = "elevare_inspecoes";
 const RASCUNHO_KEY = "elevare:rascunho"; 
 const NUMEROS_DISPONIVEIS_KEY = "elevare_numeros_disponiveis";
-const PROXIMO_NUMERO_KEY = "elevare:proximo_numero";
+const PROXIMO_NUMERO_KEY = "elevare_proximo_numero";
 
 export function emptyEstabelecimento(): Estabelecimento {
   return {
