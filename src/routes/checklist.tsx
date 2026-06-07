@@ -148,7 +148,7 @@ function ApendiceA({ insp, persist, totalItems }: { insp: Inspecao; persist: (u:
       const currentFotos = i.dados.fotos?.[id] || [];
       return {
         ...i,
-        dados: { ...i.dados, fotos: { ...i.dados.fotos, [id]: currentFotos.filter((_, k) => k !== index) } },
+        dados: { ...i.dados, fotos: { ...(i.dados?.fotos || {}), [id]: currentFotos.filter((_, k) => k !== index) } },
       };
     });
   };
