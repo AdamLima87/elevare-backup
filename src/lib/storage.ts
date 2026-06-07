@@ -122,8 +122,8 @@ export function emptyFuncionario(): Funcionario {
 
 function getNextNumero(): number {
   if (typeof localStorage === "undefined") return 1;
-  const disponiveisRaw = localStorage.getItem(NUMEROS_DISPONIVEIS_KEY);
-  const disponiveis = JSON.parse(disponiveisRaw || "[]") as number[];
+  const raw = localStorage.getItem(NUMEROS_DISPONIVEIS_KEY);
+  const disponiveis = JSON.parse(raw || "[]") as number[];
   
   if (disponiveis.length > 0) {
     const menor = Math.min(...disponiveis);
@@ -132,16 +132,16 @@ function getNextNumero(): number {
     return menor;
   }
   
-  const proximoRaw = localStorage.getItem(PROXIMO_NUMERO_KEY);
-  const proximo = parseInt(proximoRaw || "1", 10);
+  const rawProx = localStorage.getItem(PROXIMO_NUMERO_KEY);
+  const proximo = parseInt(rawProx || "1", 10);
   localStorage.setItem(PROXIMO_NUMERO_KEY, (proximo + 1).toString());
   return proximo;
 }
 
 export function releaseNumero(numero: number) {
   if (typeof localStorage === "undefined") return;
-  const disponiveisRaw = localStorage.getItem(NUMEROS_DISPONIVEIS_KEY);
-  const disponiveis = JSON.parse(disponiveisRaw || "[]") as number[];
+  const raw = localStorage.getItem(NUMEROS_DISPONIVEIS_KEY);
+  const disponiveis = JSON.parse(raw || "[]") as number[];
   
   if (!disponiveis.includes(numero)) {
     disponiveis.push(numero);
@@ -157,7 +157,7 @@ export function formatNumero(n: number) {
 export function newInspecao(): Inspecao {
   const num = getNextNumero();
   return {
-    id: num.toString(),
+    id: num.toString() + "_" + Date.now(),
     numero: num,
     status: "em_andamento",
     estabelecimento: "",
@@ -210,7 +210,6 @@ export function saveToHistorico(insp: Inspecao) {
   const list = loadHistorico();
   const idx = list.findIndex((i) => i.id === insp.id);
   
-  // Atualizar campos de resumo baseados nos dados internos
   if (insp.dados?.estabelecimento) {
     insp.estabelecimento = insp.dados.estabelecimento.nomeFantasia || insp.dados.estabelecimento.razaoSocial || "";
   }
