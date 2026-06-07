@@ -23,7 +23,7 @@ import {
   type Inspecao,
   type Resposta,
 } from "@/lib/storage";
-import { ArrowRight, Camera, Plus, X } from "lucide-react";
+import { ArrowRight, Camera, Plus, X, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/checklist")({
