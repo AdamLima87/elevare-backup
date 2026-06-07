@@ -101,6 +101,55 @@ export function gerarPDF(insp: Inspecao) {
     });
   }
 
+  // Fotos
+  const fotosExistentes: { item: string; url: string }[] = [];
+  Object.entries(insp.fotos || {}).forEach(([itemId, urls]) => {
+    urls.forEach((url) => fotosExistentes.push({ item: itemId, url }));
+  });
+
+  if (fotosExistentes.length) {
+    let lastY = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y;
+    if (lastY > doc.internal.pageSize.getHeight() - 150) {
+      doc.addPage();
+      lastY = 40;
+    } else {
+      lastY += 30;
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("Anexo Fotográfico", 40, lastY);
+    lastY += 20;
+
+    let xPos = 40;
+    const imgWidth = 160;
+    const imgHeight = 120;
+    const spacing = 15;
+
+    fotosExistentes.forEach((foto, idx) => {
+      if (lastY > doc.internal.pageSize.getHeight() - imgHeight - 40) {
+        doc.addPage();
+        lastY = 40;
+        xPos = 40;
+      }
+
+      try {
+        doc.addImage(foto.url, "JPEG", xPos, lastY, imgWidth, imgHeight);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Item ${foto.item}`, xPos, lastY + imgHeight + 10);
+      } catch (e) {
+        console.warn("Erro ao adicionar imagem ao PDF", e);
+      }
+
+      xPos += imgWidth + spacing;
+      if (xPos + imgWidth > pageWidth - 40) {
+        xPos = 40;
+        lastY += imgHeight + 35;
+      }
+    });
+  }
+
   // Footer
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
