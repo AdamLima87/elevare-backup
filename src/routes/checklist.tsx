@@ -206,7 +206,7 @@ function ApendiceA({ insp, persist, totalItems }: { insp: Inspecao; persist: (u:
                   Evidências Fotográficas do Tópico
                 </Label>
                 <div className="flex flex-wrap gap-3">
-                  {insp.dados.fotos?.[sec.id]?.map((foto: string, idx: number) => (
+                  {insp.dados?.fotos?.[sec.id]?.map((foto: string, idx: number) => (
                     <div key={idx} className="group relative h-24 w-24 overflow-hidden rounded-lg border bg-background shadow-sm">
                       <img src={foto} className="h-full w-full object-cover" alt={`Foto ${idx + 1}`} />
                       <button
