@@ -267,7 +267,8 @@ const PERG_FUNCIONARIO = [
 const UNIFORME_ITENS = ["Touca", "Boné", "Jaleco", "Calçado", "Camisa", "Calça", "Máscara", "Luvas"];
 
 function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspecao) => Inspecao) => void }) {
-  const q = insp.dados.questionario;
+  const q = insp.dados?.questionario;
+  if (!q) return null;
   const setQ = <K extends keyof typeof q>(k: K, v: (typeof q)[K]) => {
     persist((i) => ({ ...i, dados: { ...i.dados, questionario: { ...i.dados.questionario, [k]: v } } }));
   };
