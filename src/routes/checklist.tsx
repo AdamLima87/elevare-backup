@@ -281,7 +281,7 @@ function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
   const updateFunc = (idx: number, patch: Partial<Funcionario>) =>
     persist((i) => ({
       ...i,
-      dados: { ...i.dados, funcionarios: i.dados.funcionarios.map((f: Funcionario, k: number) => (k === idx ? { ...f, ...patch } : f)) }
+      dados: { ...i.dados, funcionarios: (i.dados?.funcionarios || []).map((f: Funcionario, k: number) => (k === idx ? { ...f, ...patch } : f)) }
     }));
   const removeFunc = (idx: number) =>
     persist((i) => ({ ...i, dados: { ...i.dados, funcionarios: i.dados.funcionarios.filter((_: any, k: number) => k !== idx) } }));
