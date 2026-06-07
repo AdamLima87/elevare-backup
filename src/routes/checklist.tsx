@@ -131,7 +131,7 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
   return <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}>{children}</div>;
 }
 
-function ApendiceA({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspecao) => Inspecao) => void }) {
+function ApendiceA({ insp, persist, totalItems }: { insp: Inspecao; persist: (u: (i: Inspecao) => Inspecao) => void, totalItems: number }) {
   const setResposta = (id: string, r: Resposta) => {
     persist((i) => ({ ...i, respostas: { ...i.respostas, [id]: r } }));
   };
