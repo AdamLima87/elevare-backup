@@ -1,15 +1,15 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/elevare/AppShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { deleteFromHistorico, loadHistorico, saveRascunho, type Inspecao, formatNumero, saveToHistorico } from "@/lib/storage";
-import { classificacao, calcularPercentual } from "@/lib/storage";
-import { totalChecklistItems } from "@/lib/checklist-data";
-import { Trash2, FileText, Play, History, CheckCircle2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { deleteFromHistorico, loadHistorico, saveRascunho, type Inspecao, formatNumero } from "@/lib/storage";
+import { classificacao } from "@/lib/storage";
+import { Trash2, FileText, Play, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,8 +53,8 @@ function HistoricoPage() {
     navigate({ to: "/resultado" });
   };
 
-  const emAndamento = list.filter((i) => !i.finalizada);
-  const concluidas = list.filter((i) => i.finalizada);
+  const emAndamento = list.filter((i) => i.status === "em_andamento");
+  const concluidas = list.filter((i) => i.status === "concluida");
 
   return (
     <AppShell>
@@ -75,36 +75,34 @@ function HistoricoPage() {
         </Card>
       ) : (
         <div className="space-y-8">
-          {emAndamento.length > 0 && (
-            <section>
-              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                <Play className="h-4 w-4" /> Em andamento
-              </h2>
+          <section>
+            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              <Play className="h-4 w-4" /> Em andamento
+            </h2>
+            {emAndamento.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">Nenhuma inspeção em andamento.</p>
+            ) : (
               <ul className="space-y-3">
-                {emAndamento.map((insp) => {
-                  const respondidos = Object.keys(insp.respostas).length;
-                  const progresso = Math.round((respondidos / totalChecklistItems) * 100);
-                  return (
-                    <InspecaoCard 
-                      key={insp.id} 
-                      insp={insp} 
-                      onAction={() => continuar(insp)}
-                      actionLabel="Continuar"
-                      onDelete={() => remove(insp.id)}
-                      showProgress
-                      progressoLabel={`${progresso}% preenchido`}
-                    />
-                  );
-                })}
+                {emAndamento.map((insp) => (
+                  <InspecaoCard 
+                    key={insp.id} 
+                    insp={insp} 
+                    onAction={() => continuar(insp)}
+                    actionLabel="Continuar"
+                    onDelete={() => remove(insp.id)}
+                  />
+                ))}
               </ul>
-            </section>
-          )}
+            )}
+          </section>
 
-          {concluidas.length > 0 && (
-            <section>
-              <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                <History className="h-4 w-4" /> Concluídas
-              </h2>
+          <section>
+            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              <History className="h-4 w-4" /> Concluídas
+            </h2>
+            {concluidas.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">Nenhuma inspeção concluída.</p>
+            ) : (
               <ul className="space-y-3">
                 {concluidas.map((insp) => (
                   <InspecaoCard 
@@ -116,8 +114,8 @@ function HistoricoPage() {
                   />
                 ))}
               </ul>
-            </section>
-          )}
+            )}
+          </section>
         </div>
       )}
     </AppShell>
@@ -128,48 +126,50 @@ function InspecaoCard({
   insp, 
   onAction, 
   actionLabel, 
-  onDelete,
-  showProgress,
-  progressoLabel
+  onDelete
 }: { 
   insp: Inspecao; 
   onAction: () => void; 
   actionLabel: string;
   onDelete: () => void;
-  showProgress?: boolean;
-  progressoLabel?: string;
 }) {
-  const pct = insp.percentual ?? 0;
-  const cls = classificacao(pct);
-  const data = new Date(insp.atualizadoEm).toLocaleString("pt-BR", {
+  const isConcluida = insp.status === "concluida";
+  const pct = isConcluida ? (insp.conformidade ?? 0) : insp.progresso;
+  const cls = isConcluida ? classificacao(pct) : null;
+  const dateStr = isConcluida ? insp.dataConclusao : insp.dataInicio;
+  
+  const dataFormatada = dateStr ? new Date(dateStr).toLocaleString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  });
+  }) : "";
 
   return (
-    <Card className={cn("overflow-hidden border-l-4", insp.finalizada ? "border-l-primary" : "border-l-yellow-500")}>
+    <Card className={cn("overflow-hidden border-l-4", isConcluida ? "border-l-primary" : "border-l-yellow-500")}>
       <CardContent className="p-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs font-bold text-muted-foreground">{formatNumero(insp.numero)}</span>
-              <h3 className="font-semibold">{insp.estabelecimento.nomeFantasia || insp.estabelecimento.razaoSocial}</h3>
+              <h3 className="font-semibold">{insp.estabelecimento || "Sem nome"}</h3>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
-                {insp.finalizada ? "Concluída em:" : "Iniciada em:"} {data}
+                {isConcluida ? "Concluída em:" : "Iniciada em:"} {dataFormatada}
               </span>
-              {showProgress && !insp.finalizada && (
-                <span className="font-medium text-yellow-600">{progressoLabel || "Em andamento"}</span>
+              {!isConcluida && (
+                <div className="flex w-32 items-center gap-2">
+                   <Progress value={insp.progresso} className="h-1.5" />
+                   <span className="whitespace-nowrap font-medium text-yellow-600">{insp.progresso}%</span>
+                </div>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {insp.finalizada && (
+            {isConcluida && cls && (
               <div
                 className={cn(
                   "flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
@@ -183,7 +183,7 @@ function InspecaoCard({
             )}
             
             <Button size="sm" variant="outline" onClick={onAction} className="gap-2 h-9">
-              {insp.finalizada ? <FileText className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              {isConcluida ? <FileText className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               {actionLabel}
             </Button>
 
