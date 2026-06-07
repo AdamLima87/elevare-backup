@@ -361,6 +361,30 @@ function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
                     <SelectField label="Casa própria" value={f.casaPropria} onChange={(v) => updateFunc(idx, { casaPropria: v })} options={["Sim", "Não"]} />
                     <TextField label="Nº de cômodos" value={f.numComodos} onChange={(v) => updateFunc(idx, { numComodos: v })} />
                     <SelectField label="Curso de Boas Práticas (BMP)" value={f.cursoBMP} onChange={(v) => updateFunc(idx, { cursoBMP: v })} options={["Sim", "Não"]} />
+                    <div className="space-y-3 border-t pt-3">
+                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Questionário (12–26)
+                      </div>
+                      {PERG_FUNCIONARIO.map((p) => (
+                        <div key={p.k}>
+                          <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">{p.t}</Label>
+                          <Textarea
+                            rows={2}
+                            value={f.respostas?.[p.k] || ""}
+                            onChange={(e) => {
+                              const newRespostas = { ...(f.respostas || {}), [p.k]: e.target.value };
+                              updateFunc(idx, { respostas: newRespostas });
+                            }}
+                            className="text-sm"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-2">
+                    <Button variant="ghost" size="sm" onClick={() => removeFunc(idx)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                      <Trash2 className="h-4 w-4 mr-2" /> Remover Funcionário
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
