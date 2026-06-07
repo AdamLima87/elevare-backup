@@ -23,7 +23,7 @@ import {
   type Inspecao,
   type Resposta,
 } from "@/lib/storage";
-import { ArrowRight, Camera, Plus, X } from "lucide-react";
+import { ArrowRight, Camera, Plus, X, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/checklist")({
@@ -78,7 +78,7 @@ function ChecklistPage() {
     );
   }
 
-  const respondidos = Object.values(insp.respostas).filter((r) => r !== null && r !== undefined).length;
+  const respondidos = Object.values(insp.respostas || {}).filter((r) => r !== null && r !== undefined).length;
   const progresso = Math.round((respondidos / totalChecklistItems) * 100);
 
   const finalizar = () => {
@@ -94,7 +94,7 @@ function ChecklistPage() {
       <Toaster richColors position="top-center" />
       <div className="mb-4">
         <div className="text-xs uppercase tracking-wider text-muted-foreground">Inspeção</div>
-        <h1 className="text-xl font-semibold">{insp.estabelecimento || "Sem nome"}</h1>
+        <h1 className="text-xl font-semibold">{insp.estabelecimento || insp.dados?.estabelecimento?.nomeFantasia || "Sem nome"}</h1>
         <div className="mt-3 flex items-center gap-3">
           <Progress value={progresso} className="h-2 flex-1" />
           <span className="text-xs font-medium text-muted-foreground">
@@ -110,7 +110,7 @@ function ChecklistPage() {
         </TabsList>
 
         <TabsContent value="a" className="mt-4">
-          <ApendiceA insp={insp} persist={persist} />
+          <ApendiceA insp={insp} persist={persist} totalItems={totalChecklistItems} />
         </TabsContent>
 
         <TabsContent value="b" className="mt-4">
@@ -131,7 +131,7 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
   return <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}>{children}</div>;
 }
 
-function ApendiceA({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspecao) => Inspecao) => void }) {
+function ApendiceA({ insp, persist, totalItems }: { insp: Inspecao; persist: (u: (i: Inspecao) => Inspecao) => void, totalItems: number }) {
   const setResposta = (id: string, r: Resposta) => {
     persist((i) => ({ ...i, respostas: { ...i.respostas, [id]: r } }));
   };
@@ -157,7 +157,7 @@ function ApendiceA({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
     <Accordion type="multiple" defaultValue={[checklistSections[0].id]} className="space-y-3">
       {checklistSections.map((sec) => {
         const total = sec.items.length;
-        const done = sec.items.filter((it) => insp.respostas[it.id] != null).length;
+        const done = sec.items.filter((it) => insp.respostas?.[it.id] != null).length;
         return (
           <AccordionItem key={sec.id} value={sec.id} className="overflow-hidden rounded-lg border bg-card">
             <AccordionTrigger className="bg-primary px-4 py-3 text-left text-primary-foreground hover:no-underline">
@@ -178,7 +178,7 @@ function ApendiceA({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
                     </div>
                     <div className="flex gap-1.5">
                       {(["S", "N", "NA"] as const).map((opt) => {
-                        const active = insp.respostas[item.id] === opt;
+                        const active = (insp.respostas?.[item.id] || null) === opt;
                         return (
                           <button
                             key={opt}
@@ -206,7 +206,7 @@ function ApendiceA({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
                   Evidências Fotográficas do Tópico
                 </Label>
                 <div className="flex flex-wrap gap-3">
-                  {insp.dados.fotos?.[sec.id]?.map((foto: string, idx: number) => (
+                  {insp.dados?.fotos?.[sec.id]?.map((foto: string, idx: number) => (
                     <div key={idx} className="group relative h-24 w-24 overflow-hidden rounded-lg border bg-background shadow-sm">
                       <img src={foto} className="h-full w-full object-cover" alt={`Foto ${idx + 1}`} />
                       <button
@@ -267,7 +267,8 @@ const PERG_FUNCIONARIO = [
 const UNIFORME_ITENS = ["Touca", "Boné", "Jaleco", "Calçado", "Camisa", "Calça", "Máscara", "Luvas"];
 
 function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspecao) => Inspecao) => void }) {
-  const q = insp.dados.questionario;
+  const q = insp.dados?.questionario;
+  if (!q) return null;
   const setQ = <K extends keyof typeof q>(k: K, v: (typeof q)[K]) => {
     persist((i) => ({ ...i, dados: { ...i.dados, questionario: { ...i.dados.questionario, [k]: v } } }));
   };
@@ -276,14 +277,14 @@ function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
     setQ("uniformeItens", has ? q.uniformeItens.filter((x: string) => x !== item) : [...q.uniformeItens, item]);
   };
 
-  const addFunc = () => persist((i) => ({ ...i, dados: { ...i.dados, funcionarios: [...i.dados.funcionarios, emptyFuncionario()] } }));
+  const addFunc = () => persist((i) => ({ ...i, dados: { ...i.dados, funcionarios: [...(i.dados?.funcionarios || []), emptyFuncionario()] } }));
   const updateFunc = (idx: number, patch: Partial<Funcionario>) =>
     persist((i) => ({
       ...i,
-      dados: { ...i.dados, funcionarios: i.dados.funcionarios.map((f: Funcionario, k: number) => (k === idx ? { ...f, ...patch } : f)) }
+      dados: { ...i.dados, funcionarios: (i.dados?.funcionarios || []).map((f: Funcionario, k: number) => (k === idx ? { ...f, ...patch } : f)) }
     }));
   const removeFunc = (idx: number) =>
-    persist((i) => ({ ...i, dados: { ...i.dados, funcionarios: i.dados.funcionarios.filter((_: any, k: number) => k !== idx) } }));
+    persist((i) => ({ ...i, dados: { ...i.dados, funcionarios: (i.dados?.funcionarios || []).filter((_: any, k: number) => k !== idx) } }));
 
   return (
     <div className="space-y-4">
@@ -326,11 +327,11 @@ function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
           </Button>
         </div>
         <div className="space-y-3">
-          {insp.dados.funcionarios.length === 0 && (
+          {insp.dados?.funcionarios?.length === 0 && (
             <p className="text-sm text-muted-foreground">Nenhum funcionário cadastrado.</p>
           )}
           <Accordion type="multiple" className="space-y-2">
-            {insp.dados.funcionarios.map((f: Funcionario, idx: number) => (
+            {insp.dados?.funcionarios?.map((f: Funcionario, idx: number) => (
               <AccordionItem key={idx} value={`f-${idx}`} className="rounded-lg border bg-background">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline">
                   <span className="text-sm font-medium">
@@ -360,6 +361,30 @@ function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
                     <SelectField label="Casa própria" value={f.casaPropria} onChange={(v) => updateFunc(idx, { casaPropria: v })} options={["Sim", "Não"]} />
                     <TextField label="Nº de cômodos" value={f.numComodos} onChange={(v) => updateFunc(idx, { numComodos: v })} />
                     <SelectField label="Curso de Boas Práticas (BMP)" value={f.cursoBMP} onChange={(v) => updateFunc(idx, { cursoBMP: v })} options={["Sim", "Não"]} />
+                    <div className="space-y-3 border-t pt-3">
+                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Questionário (12–26)
+                      </div>
+                      {PERG_FUNCIONARIO.map((p) => (
+                        <div key={p.k}>
+                          <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">{p.t}</Label>
+                          <Textarea
+                            rows={2}
+                            value={f.respostas?.[p.k] || ""}
+                            onChange={(e) => {
+                              const newRespostas = { ...(f.respostas || {}), [p.k]: e.target.value };
+                              updateFunc(idx, { respostas: newRespostas });
+                            }}
+                            className="text-sm"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-2">
+                    <Button variant="ghost" size="sm" onClick={() => removeFunc(idx)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                      <Trash2 className="h-4 w-4 mr-2" /> Remover Funcionário
+                    </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>

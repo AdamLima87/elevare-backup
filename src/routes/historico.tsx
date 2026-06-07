@@ -153,7 +153,7 @@ function InspecaoCard({
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs font-bold text-muted-foreground">{formatNumero(insp.numero)}</span>
-              <h3 className="font-semibold">{insp.estabelecimento || "Sem nome"}</h3>
+              <h3 className="font-semibold">{insp.estabelecimento || (insp as any).dados?.estabelecimento?.nomeFantasia || "Sem nome"}</h3>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
