@@ -79,7 +79,7 @@ function ChecklistPage() {
   }
 
   const respondidos = Object.values(insp.respostas || {}).filter((r) => r !== null && r !== undefined).length;
-  const progresso = Math.round((respondidos / totalItems) * 100);
+  const progresso = Math.round((respondidos / totalChecklistItems) * 100);
 
   const finalizar = () => {
     if (respondidos === 0) {
