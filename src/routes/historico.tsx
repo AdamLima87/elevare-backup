@@ -134,7 +134,7 @@ function InspecaoCard({
   onDelete: () => void;
 }) {
   const isConcluida = insp.status === "concluida";
-  const pct = isConcluida ? (insp.conformidade ?? 0) : insp.progresso;
+  const pct = isConcluida ? (insp.conformidade || 0) : (insp.progresso || 0);
   const cls = isConcluida ? classificacao(pct) : null;
   const dateStr = isConcluida ? insp.dataConclusao : insp.dataInicio;
   
@@ -144,7 +144,7 @@ function InspecaoCard({
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }) : "";
+  }) : "Data não disponível";
 
   return (
     <Card className={cn("overflow-hidden border-l-4", isConcluida ? "border-l-primary" : "border-l-yellow-500")}>
