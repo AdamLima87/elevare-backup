@@ -152,8 +152,10 @@ function InspecaoCard({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold text-muted-foreground">{formatNumero(insp.numero)}</span>
-              <h3 className="font-semibold">{insp.estabelecimento || (insp as any).dados?.estabelecimento?.nomeFantasia || "Sem nome"}</h3>
+              <span className="font-mono text-xs font-bold text-muted-foreground">{formatNumero(insp.numero || 0)}</span>
+              <h3 className="font-semibold">
+                {insp.estabelecimento || insp.dados?.estabelecimento?.nomeFantasia || insp.dados?.estabelecimento?.razaoSocial || "Sem nome"}
+              </h3>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -161,8 +163,8 @@ function InspecaoCard({
               </span>
               {!isConcluida && (
                 <div className="flex w-32 items-center gap-2">
-                   <Progress value={insp.progresso} className="h-1.5" />
-                   <span className="whitespace-nowrap font-medium text-yellow-600">{insp.progresso}%</span>
+                   <Progress value={insp.progresso || 0} className="h-1.5" />
+                   <span className="whitespace-nowrap font-medium text-yellow-600">{insp.progresso || 0}%</span>
                 </div>
               )}
             </div>
