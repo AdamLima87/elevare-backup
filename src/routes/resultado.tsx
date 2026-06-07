@@ -44,7 +44,18 @@ function ResultadoPage() {
       navigate({ to: "/" });
       return;
     }
-    setInsp(r);
+    
+    // Auto-save completion state when arriving at results page
+    const score = calcularPercentual(r.respostas);
+    const finalInsp: Inspecao = { 
+      ...r, 
+      status: "concluida", 
+      conformidade: score.percentual,
+      dataConclusao: new Date().toISOString()
+    };
+    
+    saveToHistorico(finalInsp);
+    setInsp(finalInsp);
   }, [navigate]);
 
   const score = useMemo(() => (insp ? calcularPercentual(insp.respostas) : null), [insp]);
@@ -75,12 +86,7 @@ function ResultadoPage() {
 
   if (!insp || !score || !cls) return null;
 
-  const finalInsp: Inspecao = { 
-    ...insp, 
-    status: "concluida", 
-    conformidade: score.percentual,
-    dataConclusao: new Date().toISOString()
-  };
+  const finalInsp = insp;
 
   const salvar = () => {
     saveToHistorico(finalInsp);
@@ -88,7 +94,6 @@ function ResultadoPage() {
   };
 
   const novaInspecao = () => {
-    saveToHistorico(finalInsp);
     clearRascunho();
     navigate({ to: "/" });
   };
