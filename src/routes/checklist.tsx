@@ -41,17 +41,15 @@ function ChecklistPage() {
     try {
       let r = loadRascunho();
       if (!r) {
-        r = newInspecao();
-        saveRascunho(r);
-        saveToHistorico(r);
+        // Se não houver rascunho, redireciona para o início
+        navigate({ to: "/" });
+        return;
       }
       setInsp(r);
     } catch (e) {
       console.error("Erro ao carregar inspeção:", e);
-      toast.error("Erro ao carregar dados. Iniciando nova inspeção.");
-      const r = newInspecao();
-      saveRascunho(r);
-      setInsp(r);
+      toast.error("Erro ao carregar dados.");
+      navigate({ to: "/" });
     }
   }, []);
 
