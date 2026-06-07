@@ -151,7 +151,7 @@ export function releaseNumero(numero: number) {
 }
 
 export function formatNumero(n: number) {
-  return `#${n.toString().padStart(3, "0")}`;
+  return `#${(n || 0).toString().padStart(3, "0")}`;
 }
 
 export function newInspecao(): Inspecao {
@@ -199,7 +199,18 @@ export function loadHistorico(): Inspecao[] {
   if (typeof localStorage === "undefined") return [];
   try {
     const raw = localStorage.getItem(HISTORICO_KEY);
-    return raw ? (JSON.parse(raw) as Inspecao[]) : [];
+    const list = raw ? (JSON.parse(raw) as Inspecao[]) : [];
+    // Ensure data integrity on load
+    return list.map(item => ({
+        ...item,
+        dados: item.dados || {
+            estabelecimento: emptyEstabelecimento(),
+            questionario: emptyQuestionario(),
+            funcionarios: [],
+            fotos: {}
+        },
+        respostas: item.respostas || {}
+    }));
   } catch {
     return [];
   }
