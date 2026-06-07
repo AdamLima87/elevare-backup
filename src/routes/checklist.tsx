@@ -43,6 +43,7 @@ function ChecklistPage() {
     if (!r) {
       r = newInspecao();
       saveRascunho(r);
+      saveToHistorico(r);
     }
     setInsp(r);
   }, []);
