@@ -29,7 +29,6 @@ export interface Funcionario {
   casaPropria: string;
   numComodos: string;
   cursoBMP: string;
-  // questionário 12-26
   respostas: Record<string, string>;
 }
 
@@ -49,22 +48,27 @@ export interface QuestionarioEstab {
 }
 
 export interface Inspecao {
-  id: string;
-  numero: number;
-  criadoEm: string;
-  atualizadoEm: string;
-  estabelecimento: Estabelecimento;
+  id: string; // Isso agora será o número sequencial convertido para string ou UUID?
+  // O usuário pediu id como número sequencial. Vamos manter id como string mas salvando o número.
+  numero: number; 
+  status: "em_andamento" | "concluida";
+  estabelecimento: string; // Nome fantasia ou razão social
+  dataInicio: string;
+  dataConclusao: string | null;
+  progresso: number; // 0 a 100
+  conformidade: number | null;
+  dados: {
+    estabelecimento: Estabelecimento;
+    questionario: QuestionarioEstab;
+    funcionarios: Funcionario[];
+    fotos: Record<string, string[]>;
+  };
   respostas: Record<string, Resposta>;
-  fotos: Record<string, string[]>;
-  questionario: QuestionarioEstab;
-  funcionarios: Funcionario[];
-  finalizada: boolean;
-  percentual?: number;
 }
 
-const HISTORICO_KEY = "elevare:historico";
-const RASCUNHO_KEY = "elevare:rascunho";
-const NUMEROS_DISPONIVEIS_KEY = "elevare:numeros_disponiveis";
+const HISTORICO_KEY = "elevare_inspecoes";
+const RASCUNHO_KEY = "elevare:rascunho"; // Manter para compatibilidade interna de navegação se necessário, mas o histórico é o mestre
+const NUMEROS_DISPONIVEIS_KEY = "elevare_numeros_disponiveis";
 const PROXIMO_NUMERO_KEY = "elevare:proximo_numero";
 
 export function emptyEstabelecimento(): Estabelecimento {
@@ -146,17 +150,23 @@ export function formatNumero(n: number) {
 }
 
 export function newInspecao(): Inspecao {
+  const num = getNextNumero();
   return {
-    id: crypto.randomUUID(),
-    numero: getNextNumero(),
-    criadoEm: new Date().toISOString(),
-    atualizadoEm: new Date().toISOString(),
-    estabelecimento: emptyEstabelecimento(),
+    id: num.toString(),
+    numero: num,
+    status: "em_andamento",
+    estabelecimento: "",
+    dataInicio: new Date().toISOString(),
+    dataConclusao: null,
+    progresso: 0,
+    conformidade: null,
+    dados: {
+      estabelecimento: emptyEstabelecimento(),
+      questionario: emptyQuestionario(),
+      funcionarios: [],
+      fotos: {},
+    },
     respostas: {},
-    fotos: {},
-    questionario: emptyQuestionario(),
-    funcionarios: [],
-    finalizada: false,
   };
 }
 
@@ -172,7 +182,6 @@ export function loadRascunho(): Inspecao | null {
 
 export function saveRascunho(insp: Inspecao) {
   if (typeof window === "undefined") return;
-  insp.atualizadoEm = new Date().toISOString();
   localStorage.setItem(RASCUNHO_KEY, JSON.stringify(insp));
 }
 
@@ -194,15 +203,20 @@ export function loadHistorico(): Inspecao[] {
 export function saveToHistorico(insp: Inspecao) {
   const list = loadHistorico();
   const idx = list.findIndex((i) => i.id === insp.id);
+  
+  // Atualizar campos de resumo baseados nos dados internos
+  insp.estabelecimento = insp.dados.estabelecimento.nomeFantasia || insp.dados.estabelecimento.razaoSocial;
+  
   if (idx >= 0) list[idx] = insp;
   else list.unshift(insp);
+  
   localStorage.setItem(HISTORICO_KEY, JSON.stringify(list));
 }
 
 export function deleteFromHistorico(id: string) {
   const list = loadHistorico();
   const item = list.find((i) => i.id === id);
-  if (item && !item.finalizada) {
+  if (item) {
     releaseNumero(item.numero);
   }
   const rascunho = loadRascunho();
