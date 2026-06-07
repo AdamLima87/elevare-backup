@@ -93,6 +93,7 @@ function IndexPage() {
     } finally {
       setLoadingCnpj(false);
     }
+  };
 
   const iniciar = () => {
     const required: (keyof Estabelecimento)[] = ["razaoSocial", "nomeFantasia", "cnpj", "respLegalNome", "dataHora"];
