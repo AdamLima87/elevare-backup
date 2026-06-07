@@ -2,8 +2,6 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/elevare/AppShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { checklistSections, totalChecklistItems } from "@/lib/checklist-data";
 import {
   emptyFuncionario,
@@ -24,7 +23,7 @@ import {
   type Inspecao,
   type Resposta,
 } from "@/lib/storage";
-import { ArrowRight, Camera, Plus, Trash2, X } from "lucide-react";
+import { ArrowRight, Camera, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/checklist")({
@@ -55,23 +54,21 @@ function ChecklistPage() {
       if (!cur) return cur;
       const next = updater(cur);
       const stats = calcularPercentual(next.respostas);
-      next.percentual = stats.percentual;
+      next.progresso = Math.round((Object.keys(next.respostas).length / totalChecklistItems) * 100);
       saveRascunho(next);
       saveToHistorico(next);
       return next;
     });
   };
 
-  if (!insp.estabelecimento.razaoSocial) {
+  if (!insp.dados.estabelecimento.razaoSocial) {
     return (
       <AppShell>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <p className="text-sm text-muted-foreground">Preencha os dados do estabelecimento primeiro.</p>
-            <Link to="/" className="mt-3 inline-block text-sm font-medium text-primary underline">
-              Ir para identificação
-            </Link>
-          </CardContent>
+        <Card className="p-6 text-center">
+          <p className="text-sm text-muted-foreground">Preencha os dados do estabelecimento primeiro.</p>
+          <Link to="/" className="mt-3 inline-block text-sm font-medium text-primary underline">
+            Ir para identificação
+          </Link>
         </Card>
       </AppShell>
     );
@@ -93,7 +90,7 @@ function ChecklistPage() {
       <Toaster richColors position="top-center" />
       <div className="mb-4">
         <div className="text-xs uppercase tracking-wider text-muted-foreground">Inspeção</div>
-        <h1 className="text-xl font-semibold">{insp.estabelecimento.nomeFantasia || insp.estabelecimento.razaoSocial}</h1>
+        <h1 className="text-xl font-semibold">{insp.estabelecimento || "Sem nome"}</h1>
         <div className="mt-3 flex items-center gap-3">
           <Progress value={progresso} className="h-2 flex-1" />
           <span className="text-xs font-medium text-muted-foreground">
@@ -126,6 +123,10 @@ function ChecklistPage() {
   );
 }
 
+function Card({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}>{children}</div>;
+}
+
 function ApendiceA({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspecao) => Inspecao) => void }) {
   const setResposta = (id: string, r: Resposta) => {
     persist((i) => ({ ...i, respostas: { ...i.respostas, [id]: r } }));
@@ -133,17 +134,17 @@ function ApendiceA({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
 
   const addFoto = (id: string, base64: string) => {
     persist((i) => {
-      const currentFotos = i.fotos?.[id] || [];
-      return { ...i, fotos: { ...i.fotos, [id]: [...currentFotos, base64] } };
+      const currentFotos = i.dados.fotos?.[id] || [];
+      return { ...i, dados: { ...i.dados, fotos: { ...i.dados.fotos, [id]: [...currentFotos, base64] } } };
     });
   };
 
   const removeFoto = (id: string, index: number) => {
     persist((i) => {
-      const currentFotos = i.fotos?.[id] || [];
+      const currentFotos = i.dados.fotos?.[id] || [];
       return {
         ...i,
-        fotos: { ...i.fotos, [id]: currentFotos.filter((_, k) => k !== index) },
+        dados: { ...i.dados, fotos: { ...i.dados.fotos, [id]: currentFotos.filter((_, k) => k !== index) } },
       };
     });
   };
@@ -196,13 +197,12 @@ function ApendiceA({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
                 ))}
               </ul>
 
-              {/* Fotos ao final da seção */}
               <div className="border-t bg-muted/20 p-4">
                 <Label className="mb-3 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Evidências Fotográficas do Tópico
                 </Label>
                 <div className="flex flex-wrap gap-3">
-                  {insp.fotos?.[sec.id]?.map((foto, idx) => (
+                  {insp.dados.fotos?.[sec.id]?.map((foto: string, idx: number) => (
                     <div key={idx} className="group relative h-24 w-24 overflow-hidden rounded-lg border bg-background shadow-sm">
                       <img src={foto} className="h-full w-full object-cover" alt={`Foto ${idx + 1}`} />
                       <button
@@ -263,72 +263,70 @@ const PERG_FUNCIONARIO = [
 const UNIFORME_ITENS = ["Touca", "Boné", "Jaleco", "Calçado", "Camisa", "Calça", "Máscara", "Luvas"];
 
 function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspecao) => Inspecao) => void }) {
-  const q = insp.questionario;
+  const q = insp.dados.questionario;
   const setQ = <K extends keyof typeof q>(k: K, v: (typeof q)[K]) => {
-    persist((i) => ({ ...i, questionario: { ...i.questionario, [k]: v } }));
+    persist((i) => ({ ...i, dados: { ...i.dados, questionario: { ...i.dados.questionario, [k]: v } } }));
   };
   const toggleUniforme = (item: string) => {
     const has = q.uniformeItens.includes(item);
-    setQ("uniformeItens", has ? q.uniformeItens.filter((x) => x !== item) : [...q.uniformeItens, item]);
+    setQ("uniformeItens", has ? q.uniformeItens.filter((x: string) => x !== item) : [...q.uniformeItens, item]);
   };
 
-  const addFunc = () => persist((i) => ({ ...i, funcionarios: [...i.funcionarios, emptyFuncionario()] }));
+  const addFunc = () => persist((i) => ({ ...i, dados: { ...i.dados, funcionarios: [...i.dados.funcionarios, emptyFuncionario()] } }));
   const updateFunc = (idx: number, patch: Partial<Funcionario>) =>
     persist((i) => ({
       ...i,
-      funcionarios: i.funcionarios.map((f, k) => (k === idx ? { ...f, ...patch } : f)),
+      dados: { ...i.dados, funcionarios: i.dados.funcionarios.map((f: Funcionario, k: number) => (k === idx ? { ...f, ...patch } : f)) }
     }));
   const removeFunc = (idx: number) =>
-    persist((i) => ({ ...i, funcionarios: i.funcionarios.filter((_, k) => k !== idx) }));
+    persist((i) => ({ ...i, dados: { ...i.dados, funcionarios: i.dados.funcionarios.filter((_: any, k: number) => k !== idx) } }));
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Dados do Responsável / Estabelecimento</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <SelectField label="1. Receptividade" value={q.receptividade} onChange={(v) => setQ("receptividade", v)} options={["Elevada", "Média", "Baixa"]} />
-          <SelectField label="2. Número de trabalhadores" value={q.numTrabalhadores} onChange={(v) => setQ("numTrabalhadores", v)} options={["1-5", "6-10", "11-20", "21-50", "Mais de 50"]} />
-          <TextField label="3. Refeições oferecidas por período" value={q.refeicoesPeriodo} onChange={(v) => setQ("refeicoesPeriodo", v)} />
-          <TextField label="4. Alimentos predominantes no cardápio" value={q.alimentosCardapio} onChange={(v) => setQ("alimentosCardapio", v)} className="sm:col-span-2" />
-          <SelectField label="5. Instruções aos funcionários" value={q.instrucoesFuncionarios} onChange={(v) => setQ("instrucoesFuncionarios", v)} options={["Sim", "Não"]} />
-          <TextField label="5.1 Qual?" value={q.instrucoesQual} onChange={(v) => setQ("instrucoesQual", v)} />
-          <SelectField label="6. Cursos e treinamentos (frequência)" value={q.cursosTreinamentos} onChange={(v) => setQ("cursosTreinamentos", v)} options={["Nunca", "Anual", "Semestral", "Trimestral", "Mensal"]} />
-          <SelectField label="7. Avaliação pós-treinamento" value={q.avaliacaoPos} onChange={(v) => setQ("avaliacaoPos", v)} options={["Sim", "Não"]} />
-          <SelectField label="8. Fornecimento de uniforme (frequência)" value={q.fornecimentoUniformeFreq} onChange={(v) => setQ("fornecimentoUniformeFreq", v)} options={["Nunca", "Anual", "Semestral", "Trimestral", "Mensal"]} />
-          <div className="sm:col-span-2">
-            <Label className="mb-2 block text-xs font-medium text-muted-foreground">8.1 Itens fornecidos</Label>
-            <div className="flex flex-wrap gap-3">
-              {UNIFORME_ITENS.map((it) => (
-                <label key={it} className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={q.uniformeItens.includes(it)} onCheckedChange={() => toggleUniforme(it)} />
-                  {it}
-                </label>
-              ))}
+      <Card className="p-4">
+          <h2 className="text-base font-bold mb-4">Dados do Responsável / Estabelecimento</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <SelectField label="1. Receptividade" value={q.receptividade} onChange={(v) => setQ("receptividade", v)} options={["Elevada", "Média", "Baixa"]} />
+            <SelectField label="2. Número de trabalhadores" value={q.numTrabalhadores} onChange={(v) => setQ("numTrabalhadores", v)} options={["1-5", "6-10", "11-20", "21-50", "Mais de 50"]} />
+            <TextField label="3. Refeições oferecidas por período" value={q.refeicoesPeriodo} onChange={(v) => setQ("refeicoesPeriodo", v)} />
+            <TextField label="4. Alimentos predominantes no cardápio" value={q.alimentosCardapio} onChange={(v) => setQ("alimentosCardapio", v)} className="sm:col-span-2" />
+            <SelectField label="5. Instruções aos funcionários" value={q.instrucoesFuncionarios} onChange={(v) => setQ("instrucoesFuncionarios", v)} options={["Sim", "Não"]} />
+            <TextField label="5.1 Qual?" value={q.instrucoesQual} onChange={(v) => setQ("instrucoesQual", v)} />
+            <SelectField label="6. Cursos e treinamentos (frequência)" value={q.cursosTreinamentos} onChange={(v) => setQ("cursosTreinamentos", v)} options={["Nunca", "Anual", "Semestral", "Trimestral", "Mensal"]} />
+            <SelectField label="7. Avaliação pós-treinamento" value={q.avaliacaoPos} onChange={(v) => setQ("avaliacaoPos", v)} options={["Sim", "Não"]} />
+            <SelectField label="8. Fornecimento de uniforme (frequência)" value={q.fornecimentoUniformeFreq} onChange={(v) => setQ("fornecimentoUniformeFreq", v)} options={["Nunca", "Anual", "Semestral", "Trimestral", "Mensal"]} />
+            <div className="sm:col-span-2">
+              <Label className="mb-2 block text-xs font-medium text-muted-foreground">8.1 Itens fornecidos</Label>
+              <div className="flex flex-wrap gap-3">
+                {UNIFORME_ITENS.map((it) => (
+                  <label key={it} className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={q.uniformeItens.includes(it)} onCheckedChange={() => toggleUniforme(it)} />
+                    {it}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <SelectField label="9. Remuneração por comissão" value={q.comissao} onChange={(v) => setQ("comissao", v)} options={["Sim", "Não"]} />
+            <div className="sm:col-span-2">
+              <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">10. Alterações desejadas no estabelecimento</Label>
+              <Textarea rows={3} value={q.alteracoesDesejadas} onChange={(e) => setQ("alteracoesDesejadas", e.target.value)} />
             </div>
           </div>
-          <SelectField label="9. Remuneração por comissão" value={q.comissao} onChange={(v) => setQ("comissao", v)} options={["Sim", "Não"]} />
-          <div className="sm:col-span-2">
-            <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">10. Alterações desejadas no estabelecimento</Label>
-            <Textarea rows={3} value={q.alteracoesDesejadas} onChange={(e) => setQ("alteracoesDesejadas", e.target.value)} />
-          </div>
-        </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Dados dos Funcionários</CardTitle>
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-bold">Dados dos Funcionários</h2>
           <Button size="sm" variant="secondary" onClick={addFunc} className="gap-1">
             <Plus className="h-4 w-4" /> Adicionar
           </Button>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {insp.funcionarios.length === 0 && (
+        </div>
+        <div className="space-y-3">
+          {insp.dados.funcionarios.length === 0 && (
             <p className="text-sm text-muted-foreground">Nenhum funcionário cadastrado.</p>
           )}
           <Accordion type="multiple" className="space-y-2">
-            {insp.funcionarios.map((f, idx) => (
+            {insp.dados.funcionarios.map((f: Funcionario, idx: number) => (
               <AccordionItem key={idx} value={`f-${idx}`} className="rounded-lg border bg-background">
                 <AccordionTrigger className="px-4 py-3 hover:no-underline">
                   <span className="text-sm font-medium">
@@ -359,29 +357,11 @@ function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
                     <TextField label="Nº de cômodos" value={f.numComodos} onChange={(v) => updateFunc(idx, { numComodos: v })} />
                     <SelectField label="Curso de Boas Práticas (BMP)" value={f.cursoBMP} onChange={(v) => updateFunc(idx, { cursoBMP: v })} options={["Sim", "Não"]} />
                   </div>
-                  <div className="space-y-3 border-t pt-3">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Questionário (12–26)
-                    </div>
-                    {PERG_FUNCIONARIO.map((p) => (
-                      <div key={p.k}>
-                        <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">{p.t}</Label>
-                        <Textarea
-                          rows={2}
-                          value={f.respostas[p.k] ?? ""}
-                          onChange={(e) => updateFunc(idx, { respostas: { ...f.respostas, [p.k]: e.target.value } })}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => removeFunc(idx)} className="gap-1 text-destructive hover:text-destructive">
-                    <Trash2 className="h-4 w-4" /> Remover funcionário
-                  </Button>
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
-        </CardContent>
+        </div>
       </Card>
     </div>
   );
@@ -390,20 +370,20 @@ function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
 function TextField({ label, value, onChange, className }: { label: string; value: string; onChange: (v: string) => void; className?: string }) {
   return (
     <div className={className}>
-      <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">{label}</Label>
-      <Input value={value} onChange={(e) => onChange(e.target.value)} />
+      <Label className="mb-1 block text-[11px] font-medium text-muted-foreground">{label}</Label>
+      <Input value={value} onChange={(e) => onChange(e.target.value)} className="h-9 text-sm" />
     </div>
   );
 }
 
-function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) {
+function SelectField({ label, value, onChange, options, className }: { label: string; value: string; onChange: (v: string) => void; options: string[]; className?: string }) {
   return (
-    <div>
-      <Label className="mb-1.5 block text-xs font-medium text-muted-foreground">{label}</Label>
+    <div className={className}>
+      <Label className="mb-1 block text-[11px] font-medium text-muted-foreground">{label}</Label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
       >
         <option value="">Selecione...</option>
         {options.map((o) => (
