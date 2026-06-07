@@ -61,15 +61,19 @@ function ChecklistPage() {
     });
   };
 
-  if (!insp.dados.estabelecimento.razaoSocial) {
+  if (!insp?.dados?.estabelecimento?.razaoSocial) {
     return (
       <AppShell>
-        <Card className="p-6 text-center">
-          <p className="text-sm text-muted-foreground">Preencha os dados do estabelecimento primeiro.</p>
-          <Link to="/" className="mt-3 inline-block text-sm font-medium text-primary underline">
-            Ir para identificação
-          </Link>
-        </Card>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+          <Card className="p-6 text-center max-w-md w-full">
+            <p className="text-sm text-muted-foreground mb-4">Os dados desta inspeção não foram encontrados ou estão incompletos.</p>
+            <Link to="/">
+              <Button className="w-full">
+                Ir para identificação
+              </Button>
+            </Link>
+          </Card>
+        </div>
       </AppShell>
     );
   }
