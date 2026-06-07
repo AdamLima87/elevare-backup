@@ -37,7 +37,6 @@ function IndexPage() {
   useEffect(() => {
     const r = loadRascunho();
     if (r) {
-      setEstab(r.dados.estabelecimento);
       setRascunho(r);
     }
   }, []);
@@ -105,16 +104,17 @@ function IndexPage() {
       return;
     }
     
-    let insp: Inspecao;
-    if (rascunho && rascunho.status === "em_andamento") {
-      insp = { ...rascunho, dados: { ...rascunho.dados, estabelecimento: estab } };
-    } else {
-      insp = newInspecao();
-      insp.dados.estabelecimento = estab;
-    }
+    const insp = newInspecao();
+    insp.dados.estabelecimento = estab;
+    insp.estabelecimento = estab.nomeFantasia || estab.razaoSocial;
     
     saveRascunho(insp);
     saveToHistorico(insp);
+    
+    // Clear initial form after starting
+    setEstab(emptyEstabelecimento());
+    setRascunho(null);
+    
     navigate({ to: "/checklist" });
   };
 
@@ -134,16 +134,6 @@ function IndexPage() {
         </p>
       </div>
 
-      {rascunho && rascunho.status === "em_andamento" && (
-        <Card className="mb-4 border-secondary/40 bg-accent/50">
-          <CardContent className="flex items-center justify-between p-4 text-sm">
-            <span>Há uma inspeção em andamento. Os dados foram restaurados.</span>
-            <Button size="sm" variant="secondary" onClick={() => navigate({ to: "/checklist" })}>
-              Continuar
-            </Button>
-          </CardContent>
-        </Card>
-      )}
 
       <Card>
         <CardHeader>
