@@ -94,7 +94,7 @@ function ChecklistPage() {
       <Toaster richColors position="top-center" />
       <div className="mb-4">
         <div className="text-xs uppercase tracking-wider text-muted-foreground">Inspeção</div>
-        <h1 className="text-xl font-semibold">{insp.estabelecimento || "Sem nome"}</h1>
+        <h1 className="text-xl font-semibold">{insp.estabelecimento || insp.dados?.estabelecimento?.nomeFantasia || "Sem nome"}</h1>
         <div className="mt-3 flex items-center gap-3">
           <Progress value={progresso} className="h-2 flex-1" />
           <span className="text-xs font-medium text-muted-foreground">
