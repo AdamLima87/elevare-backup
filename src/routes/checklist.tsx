@@ -61,8 +61,9 @@ function ChecklistPage() {
     setInsp((cur) => {
       if (!cur) return cur;
       const next = updater(cur);
-      const stats = calcularPercentual(next.respostas);
-      next.progresso = Math.round((Object.keys(next.respostas).length / totalChecklistItems) * 100);
+      const stats = calcularPercentual(next.respostas || {});
+      const totalAnswers = Object.keys(next.respostas || {}).length;
+      next.progresso = Math.round((totalAnswers / totalChecklistItems) * 100);
       saveRascunho(next);
       saveToHistorico(next);
       return next;
