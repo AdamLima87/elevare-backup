@@ -284,7 +284,7 @@ function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
       dados: { ...i.dados, funcionarios: (i.dados?.funcionarios || []).map((f: Funcionario, k: number) => (k === idx ? { ...f, ...patch } : f)) }
     }));
   const removeFunc = (idx: number) =>
-    persist((i) => ({ ...i, dados: { ...i.dados, funcionarios: i.dados.funcionarios.filter((_: any, k: number) => k !== idx) } }));
+    persist((i) => ({ ...i, dados: { ...i.dados, funcionarios: (i.dados?.funcionarios || []).filter((_: any, k: number) => k !== idx) } }));
 
   return (
     <div className="space-y-4">
