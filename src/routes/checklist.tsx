@@ -110,7 +110,7 @@ function ChecklistPage() {
         </TabsList>
 
         <TabsContent value="a" className="mt-4">
-          <ApendiceA insp={insp} persist={persist} />
+          <ApendiceA insp={insp} persist={persist} totalItems={totalChecklistItems} />
         </TabsContent>
 
         <TabsContent value="b" className="mt-4">
