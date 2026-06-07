@@ -133,7 +133,7 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 
 function ApendiceA({ insp, persist, totalItems }: { insp: Inspecao; persist: (u: (i: Inspecao) => Inspecao) => void, totalItems: number }) {
   const setResposta = (id: string, r: Resposta) => {
-    persist((i) => ({ ...i, respostas: { ...i.respostas, [id]: r } }));
+    persist((i) => ({ ...i, respostas: { ...(i.respostas || {}), [id]: r } }));
   };
 
   const addFoto = (id: string, base64: string) => {
