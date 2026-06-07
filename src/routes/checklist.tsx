@@ -18,6 +18,8 @@ import {
   loadRascunho,
   newInspecao,
   saveRascunho,
+  saveToHistorico,
+  calcularPercentual,
   type Funcionario,
   type Inspecao,
   type Resposta,
