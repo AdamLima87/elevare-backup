@@ -118,6 +118,7 @@ function ClientePage() {
                     </Card>
                   );
                 })}
+              </div>
             )}
           </div>
         )}
