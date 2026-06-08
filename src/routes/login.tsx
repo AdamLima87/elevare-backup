@@ -286,7 +286,7 @@ function LoginPage() {
                 </div>
                 <Input
                   id="password"
-                  type="password"
+                  type={userType === "cliente" ? "text" : "password"}
                   value={password}
                   onChange={(e) => handlePasswordChange(e.target.value)}
                   onKeyDown={handleKeyDown}
