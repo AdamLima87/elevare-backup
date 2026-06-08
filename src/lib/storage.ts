@@ -197,10 +197,11 @@ export async function saveRascunho(insp: Inspecao) {
     try {
       await supabase.from("inspecoes").upsert({
         id: insp.id,
-        user_id: session.user.id,
+        consultor_id: session.user.id,
         numero: insp.numero,
         status: insp.status,
-        estabelecimento: insp.estabelecimento,
+        estabelecimento_nome: insp.estabelecimento,
+        cnpj: insp.dados?.estabelecimento?.cnpj || null,
         data_inicio: insp.dataInicio,
         data_conclusao: insp.dataConclusao,
         progresso: insp.progresso,
@@ -264,10 +265,11 @@ export async function saveToHistorico(insp: Inspecao) {
     try {
       await supabase.from("inspecoes").upsert({
         id: insp.id,
-        user_id: session.user.id,
+        consultor_id: session.user.id,
         numero: insp.numero,
         status: insp.status,
-        estabelecimento: insp.estabelecimento,
+        estabelecimento_nome: insp.estabelecimento,
+        cnpj: insp.dados?.estabelecimento?.cnpj || null,
         data_inicio: insp.dataInicio,
         data_conclusao: insp.dataConclusao,
         progresso: insp.progresso,

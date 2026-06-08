@@ -21,7 +21,7 @@ export async function syncFromCloud() {
       id: item.id,
       numero: item.numero,
       status: item.status as any,
-      estabelecimento: item.estabelecimento || "",
+      estabelecimento: item.estabelecimento_nome || "",
       dataInicio: item.data_inicio || new Date().toISOString(),
       dataConclusao: item.data_conclusao,
       progresso: Number(item.progresso),
