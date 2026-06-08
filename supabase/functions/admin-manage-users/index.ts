@@ -57,7 +57,7 @@ serve(async (req) => {
       // 2. Profile should be created by trigger, but we update it to be sure
       const { error: updateError } = await supabaseAdmin
         .from('profiles')
-        .update({ nome, perfil, cnpj: perfil === 'cliente' ? cnpj : null })
+        .update({ nome, email, perfil, cnpj: perfil === 'cliente' ? cnpj : null })
         .eq('id', authUser.user.id)
 
       if (updateError) throw updateError

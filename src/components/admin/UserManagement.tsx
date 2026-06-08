@@ -218,7 +218,7 @@ export function UserManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>E-mail (ID)</TableHead>
+                  <TableHead>E-mail</TableHead>
                   <TableHead>Perfil</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -228,7 +228,7 @@ export function UserManagement() {
                 {users.map((user) => (
                   <TableRow key={user.id} className={!user.ativo ? "opacity-60" : ""}>
                     <TableCell className="font-medium">{user.nome}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{user.id}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{user.email || user.id}</TableCell>
                     <TableCell>
                       <span className={cn(
                         "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
@@ -251,7 +251,7 @@ export function UserManagement() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          onClick={() => resetPassword(user.id)} // This should be email, but profiles only has ID here. In real app, you'd join with auth.users or store email in profile.
+                          onClick={() => resetPassword(user.email || user.id)}
                           title="Redefinir Senha"
                         >
                           <RotateCcw className="h-4 w-4" />
