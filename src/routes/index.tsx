@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/elevare/AppShell";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,9 @@ import {
   type Estabelecimento,
   type Inspecao,
 } from "@/lib/storage";
-import { ArrowRight, ClipboardCheck, Loader2 } from "lucide-react";
+import { syncFromCloud } from "@/lib/sync";
+import { supabase } from "@/integrations/supabase/client";
+import { ArrowRight, ClipboardCheck, Loader2, LogIn, LogOut, User, Cloud } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,13 +35,66 @@ function IndexPage() {
   const [estab, setEstab] = useState<Estabelecimento>(emptyEstabelecimento());
   const [rascunho, setRascunho] = useState<Inspecao | null>(null);
   const [loadingCnpj, setLoadingCnpj] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     const r = loadRascunho();
     if (r) {
       setRascunho(r);
     }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        handleSync();
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        handleSync();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      await syncFromCloud();
+      toast.success("Dados sincronizados com a nuvem!");
+    } catch (err) {
+      console.error("Sync error:", err);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    const email = window.prompt("Digite seu e-mail para receber o link de acesso:");
+    if (!email) return;
+    
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      toast.error("Erro ao enviar link: " + error.message);
+    } else {
+      toast.info("Link de acesso enviado para seu e-mail!");
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Sessão encerrada");
+  };
 
   const formatCNPJ = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 14);
@@ -121,17 +176,39 @@ function IndexPage() {
   return (
     <AppShell>
       <Toaster richColors position="top-center" />
-      <div className="mb-6">
-        <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
-          <ClipboardCheck className="h-3.5 w-3.5" />
-          Diagnóstico Sanitário
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
+            <ClipboardCheck className="h-3.5 w-3.5" />
+            Diagnóstico Sanitário
+          </div>
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+            Identificação do Estabelecimento
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Preencha os dados antes de iniciar o checklist higiênico-sanitário.
+          </p>
         </div>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
-          Identificação do Estabelecimento
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Preencha os dados antes de iniciar o checklist higiênico-sanitário.
-        </p>
+
+        <div className="flex flex-wrap gap-2">
+          {user ? (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing} className="gap-2">
+                {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
+                Sincronizar
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2 text-destructive hover:bg-destructive/10">
+                <LogOut className="h-4 w-4" />
+                Sair
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleLogin} className="gap-2">
+              <LogIn className="h-4 w-4" />
+              Entrar / Sincronizar
+            </Button>
+          )}
+        </div>
       </div>
 
 
