@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Logo } from "@/components/elevare/Logo";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -19,6 +29,28 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const [isAdminExists, setIsAdminExists] = useState(true);
+
+  // Registration state for first admin
+  const [regData, setRegData] = useState({
+    nome: "",
+    email: "",
+    password: ""
+  });
+
+  useEffect(() => {
+    async function checkAdmin() {
+      const { count } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("perfil", "admin");
+      
+      setIsAdminExists(!!count && count > 0);
+    }
+    checkAdmin();
+  }, []);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
