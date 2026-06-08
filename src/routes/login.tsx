@@ -63,21 +63,39 @@ function LoginPage() {
 
       if (error) throw error;
 
+      if (!data.user) throw new Error("Usuário não encontrado");
+
       // Fetch profile to redirect correctly
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("perfil")
+        .select("perfil, ativo")
         .eq("id", data.user.id)
         .single();
 
-      if (profile?.perfil === "admin") {
-        navigate({ to: "/admin" });
-      } else if (profile?.perfil === "cliente") {
-        navigate({ to: "/meu-resultado" });
-      } else {
-        navigate({ to: "/" });
+      if (profileError) {
+        console.error("Erro ao buscar perfil:", profileError);
+        // Fallback for new users where trigger might be slow
+        toast.info("Perfil sendo configurado, tentando novamente...");
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const { data: retryProfile } = await supabase
+          .from("profiles")
+          .select("perfil, ativo")
+          .eq("id", data.user.id)
+          .single();
+        
+        if (retryProfile) {
+          redirectUser(retryProfile);
+          return;
+        }
+        throw new Error("Perfil não encontrado. Entre em contato com o suporte.");
       }
-      
+
+      if (!profile.ativo) {
+        await supabase.auth.signOut();
+        throw new Error("Sua conta está desativada.");
+      }
+
+      redirectUser(profile);
       toast.success("Login realizado com sucesso!");
     } catch (error: any) {
       toast.error(error.message || "Erro ao fazer login");
@@ -85,6 +103,17 @@ function LoginPage() {
       setLoading(false);
     }
   };
+
+  const redirectUser = (profile: any) => {
+    if (profile?.perfil === "admin") {
+      navigate({ to: "/admin" });
+    } else if (profile?.perfil === "cliente") {
+      navigate({ to: "/meu-resultado" });
+    } else {
+      navigate({ to: "/" });
+    }
+  };
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
