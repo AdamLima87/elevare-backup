@@ -37,7 +37,8 @@ export function AllInspections() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
       const { data: profile } = await supabase
         .from("profiles")
         .select("perfil")
