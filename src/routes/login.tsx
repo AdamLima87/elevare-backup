@@ -46,6 +46,20 @@ function LoginPage() {
   });
 
   useEffect(() => {
+    if (searchError) {
+      let msg = "";
+      if (searchError === "account_disabled") msg = "Sua conta está desativada. Entre em contato com o suporte.";
+      if (searchError === "profile_not_found") msg = "Perfil não encontrado. Verifique se seu cadastro foi concluído.";
+      if (searchError === "insufficient_permissions") msg = "Você não tem permissão para acessar esta área.";
+      
+      if (msg) toast.error(msg);
+      
+      // Limpa a URL removendo o erro após mostrar o toast
+      navigate({ to: "/login", replace: true });
+    }
+  }, [searchError, navigate]);
+
+  useEffect(() => {
     async function checkAdmin() {
       const { count } = await supabase
         .from("profiles")
