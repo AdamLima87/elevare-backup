@@ -42,7 +42,7 @@ export function AllInspections() {
       const { data: profile } = await supabase
         .from("profiles")
         .select("perfil")
-        .eq("id", user?.id)
+        .eq("id", user?.id || "")
         .single();
 
       // Fetch inspections
