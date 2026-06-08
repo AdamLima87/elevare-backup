@@ -30,6 +30,15 @@ export const Route = createFileRoute("/historico")({
 });
 
 function HistoricoPage() {
+  return (
+    <ProtectedRoute allowedProfiles={["admin", "consultor"]}>
+      <HistoricoContent />
+    </ProtectedRoute>
+  );
+}
+
+function HistoricoContent() {
+
   const navigate = useNavigate();
   const [list, setList] = useState<Inspecao[]>([]);
 
@@ -120,7 +129,9 @@ function HistoricoPage() {
       )}
     </AppShell>
   );
+  }
 }
+
 
 function InspecaoCard({ 
   insp, 

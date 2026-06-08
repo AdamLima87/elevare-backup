@@ -34,6 +34,15 @@ export const Route = createFileRoute("/checklist")({
 });
 
 function ChecklistPage() {
+  return (
+    <ProtectedRoute allowedProfiles={["admin", "consultor"]}>
+      <ChecklistContent />
+    </ProtectedRoute>
+  );
+}
+
+function ChecklistContent() {
+
   const navigate = useNavigate();
   const [insp, setInsp] = useState<Inspecao | null>(null);
 
@@ -150,7 +159,9 @@ function ChecklistPage() {
       </AppShell>
     );
   }
+  }
 }
+
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}>{children}</div>;
