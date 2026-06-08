@@ -8,7 +8,8 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { SplashScreen } from "@/components/elevare/SplashScreen";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -126,11 +127,21 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [showSplash, setShowSplash] = useState(false);
+
+  useEffect(() => {
+    // Check if splash has been shown in this session
+    const splashShown = sessionStorage.getItem("splash_shown");
+    if (!splashShown) {
+      setShowSplash(true);
+      sessionStorage.setItem("splash_shown", "true");
+    }
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster position="top-right" richColors closeButton />
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
       <Outlet />
     </QueryClientProvider>
   );
