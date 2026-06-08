@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export type Resposta = "S" | "N" | "NA" | null;
 
 export interface Estabelecimento {
@@ -185,14 +187,40 @@ export function loadRascunho(): Inspecao | null {
   }
 }
 
-export function saveRascunho(insp: Inspecao) {
+export async function saveRascunho(insp: Inspecao) {
   if (typeof localStorage === "undefined") return;
   localStorage.setItem(RASCUNHO_KEY, JSON.stringify(insp));
+  
+  // Sync to Cloud if authenticated
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) {
+    try {
+      await supabase.from("inspecoes").upsert({
+        id: insp.id,
+        user_id: session.user.id,
+        numero: insp.numero,
+        status: insp.status,
+        estabelecimento: insp.estabelecimento,
+        data_inicio: insp.dataInicio,
+        data_conclusao: insp.dataConclusao,
+        progresso: insp.progresso,
+        conformidade: insp.conformidade,
+        dados: insp.dados as any,
+        respostas: insp.respostas as any,
+      });
+    } catch (err) {
+      console.error("Failed to sync rascunho to Cloud:", err);
+    }
+  }
 }
 
-export function clearRascunho() {
+export async function clearRascunho() {
   if (typeof localStorage === "undefined") return;
+  const rascunho = loadRascunho();
   localStorage.removeItem(RASCUNHO_KEY);
+  
+  // Note: We don't necessarily want to delete from Cloud when clearing local draft
+  // but if the draft ID is deleted from history, that's handled in deleteFromHistorico
 }
 
 export function loadHistorico(): Inspecao[] {
@@ -216,7 +244,7 @@ export function loadHistorico(): Inspecao[] {
   }
 }
 
-export function saveToHistorico(insp: Inspecao) {
+export async function saveToHistorico(insp: Inspecao) {
   if (typeof localStorage === "undefined") return;
   const list = loadHistorico();
   const idx = list.findIndex((i) => i.id === insp.id);
@@ -229,9 +257,31 @@ export function saveToHistorico(insp: Inspecao) {
   else list.unshift(insp);
   
   localStorage.setItem(HISTORICO_KEY, JSON.stringify(list));
+
+  // Sync to Cloud
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) {
+    try {
+      await supabase.from("inspecoes").upsert({
+        id: insp.id,
+        user_id: session.user.id,
+        numero: insp.numero,
+        status: insp.status,
+        estabelecimento: insp.estabelecimento,
+        data_inicio: insp.dataInicio,
+        data_conclusao: insp.dataConclusao,
+        progresso: insp.progresso,
+        conformidade: insp.conformidade,
+        dados: insp.dados as any,
+        respostas: insp.respostas as any,
+      });
+    } catch (err) {
+      console.error("Failed to sync to Cloud:", err);
+    }
+  }
 }
 
-export function deleteFromHistorico(id: string) {
+export async function deleteFromHistorico(id: string) {
   if (typeof localStorage === "undefined") return;
   const list = loadHistorico();
   const item = list.find((i) => i.id === id);
@@ -240,10 +290,20 @@ export function deleteFromHistorico(id: string) {
   }
   const rascunho = loadRascunho();
   if (rascunho && rascunho.id === id) {
-    clearRascunho();
+    await clearRascunho();
   }
   const filtered = list.filter((i) => i.id !== id);
   localStorage.setItem(HISTORICO_KEY, JSON.stringify(filtered));
+
+  // Sync to Cloud
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) {
+    try {
+      await supabase.from("inspecoes").delete().eq("id", id);
+    } catch (err) {
+      console.error("Failed to delete from Cloud:", err);
+    }
+  }
 }
 
 export function calcularPercentual(respostas: Record<string, Resposta>): {
