@@ -2,27 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/elevare/AppShell";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { deleteFromHistorico, loadHistorico, saveRascunho, type Inspecao, formatNumero } from "@/lib/storage";
-import { classificacao } from "@/lib/storage";
-import { Trash2, FileText, Play, History } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Toaster } from "@/components/ui/sonner";
-import { toast } from "sonner";
-import { Progress } from "@/components/ui/progress";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { AllInspections } from "@/components/admin/AllInspections";
 
 export const Route = createFileRoute("/historico")({
   head: () => ({
@@ -34,7 +14,13 @@ export const Route = createFileRoute("/historico")({
 function HistoricoPage() {
   return (
     <ProtectedRoute allowedProfiles={["admin", "consultor"]}>
-      <HistoricoContent />
+      <AppShell>
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold">Histórico de Inspeções</h1>
+          <p className="text-sm text-muted-foreground">Visualize e gerencie todas as inspeções realizadas.</p>
+        </div>
+        <AllInspections />
+      </AppShell>
     </ProtectedRoute>
   );
 }
