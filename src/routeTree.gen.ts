@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResultadoRouteImport } from './routes/resultado'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as MeuResultadoRouteImport } from './routes/meu-resultado'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
@@ -22,6 +23,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const ResultadoRoute = ResultadoRouteImport.update({
   id: '/resultado',
   path: '/resultado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeuResultadoRoute = MeuResultadoRouteImport.update({
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/meu-resultado': typeof MeuResultadoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resultado': typeof ResultadoRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/meu-resultado': typeof MeuResultadoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resultado': typeof ResultadoRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/meu-resultado': typeof MeuResultadoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resultado': typeof ResultadoRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/login'
     | '/meu-resultado'
+    | '/reset-password'
     | '/resultado'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/login'
     | '/meu-resultado'
+    | '/reset-password'
     | '/resultado'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/historico'
     | '/login'
     | '/meu-resultado'
+    | '/reset-password'
     | '/resultado'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
   MeuResultadoRoute: typeof MeuResultadoRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ResultadoRoute: typeof ResultadoRoute
 }
 
@@ -154,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/resultado'
       fullPath: '/resultado'
       preLoaderRoute: typeof ResultadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meu-resultado': {
@@ -224,8 +244,19 @@ const rootRouteChildren: RootRouteChildren = {
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
   MeuResultadoRoute: MeuResultadoRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ResultadoRoute: ResultadoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
