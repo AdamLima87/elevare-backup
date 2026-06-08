@@ -150,7 +150,7 @@ function LoginPage() {
     } else if (profile?.perfil === "cliente") {
       navigate({ to: "/meu-resultado" });
     } else {
-      navigate({ to: "/" });
+      navigate({ to: "/login", search: { error: "insufficient_permissions" } });
     }
   };
 
