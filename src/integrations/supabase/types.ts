@@ -100,19 +100,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_user_profile: {
-        Args: { _user_id: string }
-        Returns: {
-          ativo: boolean
-          cnpj: string
-          perfil: string
-        }[]
-      }
-      has_profile: {
-        Args: { _perfil: string; _user_id: string }
-        Returns: boolean
-      }
-      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
