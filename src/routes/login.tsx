@@ -20,10 +20,16 @@ import {
 
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      error: (search.error as string) || undefined,
+    };
+  },
   component: LoginPage,
 });
 
 function LoginPage() {
+  const { error: searchError } = Route.useSearch();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
