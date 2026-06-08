@@ -253,7 +253,11 @@ function LoginPage() {
             <form onSubmit={handleLogin} className="space-y-5 py-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
               <button
                 type="button"
-                onClick={() => setStep("selection")}
+                onClick={() => {
+                  setStep("selection");
+                  setEmail("");
+                  setPassword("");
+                }}
                 className="flex items-center text-sm font-medium text-slate-500 hover:text-[#1a4d2e] transition-colors mb-2"
               >
                 <span className="mr-1">←</span> Voltar para seleção
