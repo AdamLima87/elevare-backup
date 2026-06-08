@@ -86,7 +86,34 @@ function LoginPage() {
     }
   };
 
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: regData.email,
+        password: regData.password,
+        options: {
+          data: {
+            nome: regData.nome,
+          }
+        }
+      });
+
+      if (error) throw error;
+      
+      toast.success("Administrador criado! Verifique seu e-mail ou faça login.");
+      setShowRegister(false);
+      setIsAdminExists(true);
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao criar administrador");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleResetPassword = async () => {
+
     if (!email) {
       toast.error("Informe seu e-mail primeiro");
       return;
@@ -141,7 +168,7 @@ function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Entrar"}
             </Button>
-            <div className="text-center">
+            <div className="flex flex-col gap-3 text-center">
               <button
                 type="button"
                 onClick={handleResetPassword}
@@ -150,7 +177,64 @@ function LoginPage() {
               >
                 Esqueci minha senha
               </button>
+
+              {!isAdminExists && (
+                <Dialog open={showRegister} onOpenChange={setShowRegister}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full gap-2 border-primary/30 hover:bg-primary/5">
+                      <UserPlus className="h-4 w-4" /> Criar Primeiro Admin
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <form onSubmit={handleRegister}>
+                      <DialogHeader>
+                        <DialogTitle>Cadastro de Administrador</DialogTitle>
+                        <DialogDescription>
+                          Não há administradores cadastrados. Crie a primeira conta para gerenciar o sistema.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="reg-nome">Nome</Label>
+                          <Input 
+                            id="reg-nome" 
+                            value={regData.nome} 
+                            onChange={e => setRegData({...regData, nome: e.target.value})}
+                            required 
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="reg-email">E-mail</Label>
+                          <Input 
+                            id="reg-email" 
+                            type="email" 
+                            value={regData.email} 
+                            onChange={e => setRegData({...regData, email: e.target.value})}
+                            required 
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="reg-pass">Senha</Label>
+                          <Input 
+                            id="reg-pass" 
+                            type="password" 
+                            value={regData.password} 
+                            onChange={e => setRegData({...regData, password: e.target.value})}
+                            required 
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit" disabled={loading}>
+                          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Criar Admin"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
+
           </form>
         </CardContent>
       </Card>
