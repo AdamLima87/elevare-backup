@@ -16,46 +16,82 @@ export type Database = {
     Tables: {
       inspecoes: {
         Row: {
+          cnpj: string | null
           conformidade: number | null
+          consultor_id: string | null
+          created_at: string
           dados: Json
           data_conclusao: string | null
-          data_inicio: string | null
-          estabelecimento: string | null
+          data_inicio: string
+          estabelecimento_nome: string | null
           id: string
           numero: number
-          progresso: number | null
+          progresso: number
           respostas: Json
           status: string
-          updated_at: string | null
-          user_id: string | null
+          updated_at: string
         }
         Insert: {
+          cnpj?: string | null
           conformidade?: number | null
+          consultor_id?: string | null
+          created_at?: string
           dados?: Json
           data_conclusao?: string | null
-          data_inicio?: string | null
-          estabelecimento?: string | null
-          id: string
-          numero: number
-          progresso?: number | null
-          respostas?: Json
-          status: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          conformidade?: number | null
-          dados?: Json
-          data_conclusao?: string | null
-          data_inicio?: string | null
-          estabelecimento?: string | null
+          data_inicio?: string
+          estabelecimento_nome?: string | null
           id?: string
-          numero?: number
-          progresso?: number | null
+          numero: number
+          progresso?: number
           respostas?: Json
           status?: string
-          updated_at?: string | null
-          user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string | null
+          conformidade?: number | null
+          consultor_id?: string | null
+          created_at?: string
+          dados?: Json
+          data_conclusao?: string | null
+          data_inicio?: string
+          estabelecimento_nome?: string | null
+          id?: string
+          numero?: number
+          progresso?: number
+          respostas?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          ativo: boolean
+          cnpj: string | null
+          created_at: string
+          id: string
+          nome: string
+          perfil: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cnpj?: string | null
+          created_at?: string
+          id: string
+          nome: string
+          perfil: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cnpj?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+          perfil?: string
+          updated_at?: string
         }
         Relationships: []
       }
