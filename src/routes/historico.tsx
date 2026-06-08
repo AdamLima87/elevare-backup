@@ -129,8 +129,8 @@ function HistoricoContent() {
       )}
     </AppShell>
   );
-  }
 }
+
 
 
 function InspecaoCard({ 
