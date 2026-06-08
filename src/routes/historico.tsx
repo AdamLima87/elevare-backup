@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/elevare/AppShell";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { deleteFromHistorico, loadHistorico, saveRascunho, type Inspecao, formatNumero } from "@/lib/storage";
@@ -30,6 +32,15 @@ export const Route = createFileRoute("/historico")({
 });
 
 function HistoricoPage() {
+  return (
+    <ProtectedRoute allowedProfiles={["admin", "consultor"]}>
+      <HistoricoContent />
+    </ProtectedRoute>
+  );
+}
+
+function HistoricoContent() {
+
   const navigate = useNavigate();
   const [list, setList] = useState<Inspecao[]>([]);
 
@@ -121,6 +132,8 @@ function HistoricoPage() {
     </AppShell>
   );
 }
+
+
 
 function InspecaoCard({ 
   insp, 

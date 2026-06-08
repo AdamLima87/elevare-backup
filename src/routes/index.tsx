@@ -36,7 +36,9 @@ function IndexPage() {
   const [rascunho, setRascunho] = useState<Inspecao | null>(null);
   const [loadingCnpj, setLoadingCnpj] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [syncing, setSyncing] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
     const r = loadRascunho();
@@ -44,22 +46,60 @@ function IndexPage() {
       setRascunho(r);
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        handleSync();
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate({ to: "/login" });
+        return;
       }
-    });
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (!profileData || !profileData.ativo) {
+        await supabase.auth.signOut();
+        navigate({ to: "/login" });
+        return;
+      }
+
+      setUser(session.user);
+      setProfile(profileData);
+      setCheckingAuth(false);
+
+      if (profileData.perfil === "cliente") {
+        navigate({ to: "/meu-resultado" });
+      } else if (profileData.perfil === "admin") {
+        // Admins might want to stay here or go to /admin
+      }
+
+      handleSync();
+    }
+
+    checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        handleSync();
+      if (!session) {
+        navigate({ to: "/login" });
+      } else {
+        checkAuth();
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
 
   const handleSync = async () => {
     setSyncing(true);
@@ -73,23 +113,10 @@ function IndexPage() {
     }
   };
 
-  const handleLogin = async () => {
-    const email = window.prompt("Digite seu e-mail para receber o link de acesso:");
-    if (!email) return;
-    
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
-    });
-
-    if (error) {
-      toast.error("Erro ao enviar link: " + error.message);
-    } else {
-      toast.info("Link de acesso enviado para seu e-mail!");
-    }
+  const handleLogin = () => {
+    navigate({ to: "/login" });
   };
+
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
