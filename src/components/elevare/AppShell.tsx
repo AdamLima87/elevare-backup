@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useState } from "react";
-import { ClipboardList, History, Home, LogOut, Shield, User } from "lucide-react";
+import { ClipboardList, History, Home, LogOut, Settings, Shield, User } from "lucide-react";
 import { Logo } from "./Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -86,7 +86,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span className="hidden sm:inline">Resultados</span>
               </Link>
             )}
-            
+            <Link
+              to="/configuracoes"
+              className="flex items-center gap-1.5 rounded-md px-3 py-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+              activeProps={{ className: "flex items-center gap-1.5 rounded-md px-3 py-2 bg-accent text-foreground font-medium" }}
+            >
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Configurações</span>
+            </Link>
             <div className="ml-2 pl-2 border-l flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={handleLogout} className="h-8 w-8 text-muted-foreground">
                 <LogOut className="h-4 w-4" />

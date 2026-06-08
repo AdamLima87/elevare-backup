@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResultadoRouteImport } from './routes/resultado'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as MeuResultadoRouteImport } from './routes/meu-resultado'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ChecklistRouteImport } from './routes/checklist'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AcessoNegadoRouteImport } from './routes/acesso-negado'
@@ -21,6 +23,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const ResultadoRoute = ResultadoRouteImport.update({
   id: '/resultado',
   path: '/resultado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeuResultadoRoute = MeuResultadoRouteImport.update({
@@ -36,6 +43,11 @@ const LoginRoute = LoginRouteImport.update({
 const HistoricoRoute = HistoricoRouteImport.update({
   id: '/historico',
   path: '/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChecklistRoute = ChecklistRouteImport.update({
@@ -64,9 +76,11 @@ export interface FileRoutesByFullPath {
   '/acesso-negado': typeof AcessoNegadoRoute
   '/admin': typeof AdminRoute
   '/checklist': typeof ChecklistRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/meu-resultado': typeof MeuResultadoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resultado': typeof ResultadoRoute
 }
 export interface FileRoutesByTo {
@@ -74,9 +88,11 @@ export interface FileRoutesByTo {
   '/acesso-negado': typeof AcessoNegadoRoute
   '/admin': typeof AdminRoute
   '/checklist': typeof ChecklistRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/meu-resultado': typeof MeuResultadoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resultado': typeof ResultadoRoute
 }
 export interface FileRoutesById {
@@ -85,9 +101,11 @@ export interface FileRoutesById {
   '/acesso-negado': typeof AcessoNegadoRoute
   '/admin': typeof AdminRoute
   '/checklist': typeof ChecklistRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/meu-resultado': typeof MeuResultadoRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resultado': typeof ResultadoRoute
 }
 export interface FileRouteTypes {
@@ -97,9 +115,11 @@ export interface FileRouteTypes {
     | '/acesso-negado'
     | '/admin'
     | '/checklist'
+    | '/configuracoes'
     | '/historico'
     | '/login'
     | '/meu-resultado'
+    | '/reset-password'
     | '/resultado'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -107,9 +127,11 @@ export interface FileRouteTypes {
     | '/acesso-negado'
     | '/admin'
     | '/checklist'
+    | '/configuracoes'
     | '/historico'
     | '/login'
     | '/meu-resultado'
+    | '/reset-password'
     | '/resultado'
   id:
     | '__root__'
@@ -117,9 +139,11 @@ export interface FileRouteTypes {
     | '/acesso-negado'
     | '/admin'
     | '/checklist'
+    | '/configuracoes'
     | '/historico'
     | '/login'
     | '/meu-resultado'
+    | '/reset-password'
     | '/resultado'
   fileRoutesById: FileRoutesById
 }
@@ -128,9 +152,11 @@ export interface RootRouteChildren {
   AcessoNegadoRoute: typeof AcessoNegadoRoute
   AdminRoute: typeof AdminRoute
   ChecklistRoute: typeof ChecklistRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
   MeuResultadoRoute: typeof MeuResultadoRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ResultadoRoute: typeof ResultadoRoute
 }
 
@@ -141,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/resultado'
       fullPath: '/resultado'
       preLoaderRoute: typeof ResultadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meu-resultado': {
@@ -162,6 +195,13 @@ declare module '@tanstack/react-router' {
       path: '/historico'
       fullPath: '/historico'
       preLoaderRoute: typeof HistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checklist': {
@@ -200,9 +240,11 @@ const rootRouteChildren: RootRouteChildren = {
   AcessoNegadoRoute: AcessoNegadoRoute,
   AdminRoute: AdminRoute,
   ChecklistRoute: ChecklistRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
   MeuResultadoRoute: MeuResultadoRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ResultadoRoute: ResultadoRoute,
 }
 export const routeTree = rootRouteImport
