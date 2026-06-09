@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, FileText, Trash2 } from "lucide-react";
+import { Loader2, Search, FileText, Trash2, Mail } from "lucide-react";
 import { classificacao, deleteFromHistorico } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
@@ -34,6 +34,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
+import { Label } from "@/components/ui/label";
 
 export function AllInspections() {
   const [inspections, setInspections] = useState<any[]>([]);
