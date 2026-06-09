@@ -48,6 +48,7 @@ function ChecklistContent() {
 
   const navigate = useNavigate();
   const [insp, setInsp] = useState<Inspecao | null>(null);
+  const [activeTab, setActiveTab] = useState("a");
 
   useEffect(() => {
     try {
@@ -129,14 +130,19 @@ function ChecklistContent() {
           </div>
         </div>
 
-        <Tabs defaultValue="a">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="a">Apêndice A — Verificação</TabsTrigger>
             <TabsTrigger value="b">Apêndice B — Questionário</TabsTrigger>
           </TabsList>
 
           <TabsContent value="a" className="mt-4">
-            <ApendiceA insp={insp} persist={persist} totalItems={totalChecklistItems} />
+            <ApendiceA 
+              insp={insp} 
+              persist={persist} 
+              totalItems={totalChecklistItems} 
+              onComplete={() => setActiveTab("b")}
+            />
           </TabsContent>
 
           <TabsContent value="b" className="mt-4">
@@ -175,7 +181,7 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
   return <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}>{children}</div>;
 }
 
-function ApendiceA({ insp, persist, totalItems }: { insp: Inspecao; persist: (u: (i: Inspecao) => Inspecao) => void, totalItems: number }) {
+function ApendiceA({ insp, persist, totalItems, onComplete }: { insp: Inspecao; persist: (u: (i: Inspecao) => Inspecao) => void, totalItems: number, onComplete: () => void }) {
   const setResposta = (id: string, r: Resposta) => {
     persist((i) => ({ ...i, respostas: { ...(i.respostas || {}), [id]: r } }));
   };
@@ -291,6 +297,14 @@ function ApendiceA({ insp, persist, totalItems }: { insp: Inspecao; persist: (u:
           );
         })}
       </Accordion>
+      <div className="mt-8 flex justify-end">
+        <Button 
+          onClick={onComplete}
+          className="gap-2"
+        >
+          Próximo: Apêndice B <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
     );
   } catch (err) {
     console.error("Erro na renderização do Apêndice A:", err);
@@ -406,10 +420,6 @@ function ApendiceB({ insp, persist }: { insp: Inspecao; persist: (u: (i: Inspeca
                         ]}
                       />
                       <SelectField label="Carteira assinada" value={f.carteiraAssinada} onChange={(v) => updateFunc(idx, { carteiraAssinada: v })} options={["Sim", "Não"]} />
-                      <TextField label="Renda" value={f.renda} onChange={(v) => updateFunc(idx, { renda: v })} />
-                      <TextField label="Banhos diários" value={f.banhosDiarios} onChange={(v) => updateFunc(idx, { banhosDiarios: v })} />
-                      <SelectField label="Casa própria" value={f.casaPropria} onChange={(v) => updateFunc(idx, { casaPropria: v })} options={["Sim", "Não"]} />
-                      <TextField label="Nº de cômodos" value={f.numComodos} onChange={(v) => updateFunc(idx, { numComodos: v })} />
                       <SelectField label="Curso de Boas Práticas (BMP)" value={f.cursoBMP} onChange={(v) => updateFunc(idx, { cursoBMP: v })} options={["Sim", "Não"]} />
                       <div className="space-y-3 border-t pt-3">
                         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
