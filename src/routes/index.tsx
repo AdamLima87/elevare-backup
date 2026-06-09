@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import {
   emptyEstabelecimento,
   loadRascunho,
-  newInspecao,
+  createNewInspecao,
   saveRascunho,
   saveToHistorico,
   type Estabelecimento,
@@ -195,7 +195,7 @@ function IndexPage() {
     }
   };
 
-  const iniciar = () => {
+  const iniciar = async () => {
     const required: (keyof Estabelecimento)[] = ["razaoSocial", "nomeFantasia", "cnpj", "respLegalNome", "dataHora"];
     const missing = required.filter((k) => !estab[k]);
     if (missing.length) {
@@ -203,18 +203,27 @@ function IndexPage() {
       return;
     }
     
-    const insp = newInspecao();
-    insp.dados.estabelecimento = estab;
-    insp.estabelecimento = estab.nomeFantasia || estab.razaoSocial;
-    
-    saveRascunho(insp);
-    saveToHistorico(insp);
-    
-    // Clear initial form after starting
-    setEstab(emptyEstabelecimento());
-    setRascunho(null);
-    
-    navigate({ to: "/checklist" });
+    const loadingToast = toast.loading("Iniciando checklist...");
+    try {
+      const { createNewInspecao } = await import("@/lib/storage");
+      const insp = await createNewInspecao();
+      insp.dados.estabelecimento = estab;
+      insp.estabelecimento = estab.nomeFantasia || estab.razaoSocial;
+      
+      await saveRascunho(insp);
+      await saveToHistorico(insp);
+      
+      // Clear initial form after starting
+      setEstab(emptyEstabelecimento());
+      setRascunho(null);
+      
+      toast.dismiss(loadingToast);
+      navigate({ to: "/checklist" });
+    } catch (error) {
+      console.error("Erro ao iniciar inspeção:", error);
+      toast.error("Erro ao iniciar inspeção. Verifique sua conexão.");
+      toast.dismiss(loadingToast);
+    }
   };
 
   return (
