@@ -18,7 +18,8 @@ import {
 } from "@/lib/storage";
 import { syncFromCloud } from "@/lib/sync";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, ClipboardCheck, Loader2, LogIn, LogOut, User, Cloud } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Loader2, LogIn, LogOut, User, Cloud, RefreshCw } from "lucide-react";
+import { SyncStatus } from "@/components/elevare/SyncStatus";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -236,8 +237,9 @@ function IndexPage() {
         <div className="flex flex-wrap gap-2">
           {user ? (
             <div className="flex items-center gap-2">
+              <SyncStatus />
               <Button variant="outline" size="sm" onClick={() => handleSync(false)} disabled={syncing} className="gap-2">
-                {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
+                {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                 Sincronizar
               </Button>
               <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2 text-destructive hover:bg-destructive/10">
