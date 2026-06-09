@@ -108,6 +108,8 @@ export type Database = {
           id: string
           nome: string
           perfil: string
+          senha_texto: string | null
+          ultimo_acesso: string | null
           updated_at: string
         }
         Insert: {
@@ -119,6 +121,8 @@ export type Database = {
           id: string
           nome: string
           perfil: string
+          senha_texto?: string | null
+          ultimo_acesso?: string | null
           updated_at?: string
         }
         Update: {
@@ -130,6 +134,8 @@ export type Database = {
           id?: string
           nome?: string
           perfil?: string
+          senha_texto?: string | null
+          ultimo_acesso?: string | null
           updated_at?: string
         }
         Relationships: []
