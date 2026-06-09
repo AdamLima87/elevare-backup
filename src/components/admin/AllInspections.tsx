@@ -197,7 +197,7 @@ export function AllInspections() {
                               cls.tone === "warning" && "text-warning",
                               cls.tone === "destructive" && "text-destructive"
                             )}>
-                              {insp.conformidade}%
+                              {Number(insp.conformidade).toFixed(2)}%
                             </div>
                           ) : (
                             <span className="text-xs text-muted-foreground">{insp.progresso}%</span>
