@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Inspecao, loadHistorico, HISTORICO_KEY } from "./storage";
 
-export async function syncFromCloud() {
+export async function syncFromCloud(silent = false) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) return;
 
