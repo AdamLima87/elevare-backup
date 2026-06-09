@@ -6,6 +6,79 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+function generateTemporaryPassword(length = 12) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%'
+  const bytes = new Uint8Array(length)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, (byte) => chars[byte % chars.length]).join('')
+}
+
+async function enqueueTemporaryPasswordEmail(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  email: string,
+  tempPassword: string,
+  nome?: string | null,
+) {
+  const safeName = escapeHtml(nome || 'Olá')
+  const safePassword = escapeHtml(tempPassword)
+  const messageId = crypto.randomUUID()
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.5; padding: 24px;">
+      <h1 style="font-size: 22px; margin: 0 0 16px;">Senha provisória</h1>
+      <p>${safeName}, recebemos uma solicitação para redefinir sua senha.</p>
+      <p>Use a senha provisória abaixo para acessar o sistema:</p>
+      <p style="font-size: 20px; font-weight: 700; letter-spacing: 1px; background: #f3f4f6; padding: 12px 16px; border-radius: 6px; display: inline-block;">${safePassword}</p>
+      <p>Ao entrar, você será obrigado a criar uma nova senha.</p>
+      <p style="font-size: 12px; color: #6b7280; margin-top: 24px;">Se você não solicitou essa alteração, entre em contato com o suporte.</p>
+    </div>
+  `
+  const text = `${nome || 'Olá'}, recebemos uma solicitação para redefinir sua senha. Use esta senha provisória para acessar o sistema: ${tempPassword}. Ao entrar, você será obrigado a criar uma nova senha.`
+
+  const { error: logError } = await supabaseAdmin.from('email_send_log').insert({
+    message_id: messageId,
+    template_name: 'temporary_password',
+    recipient_email: email,
+    status: 'pending',
+  })
+  if (logError) console.error('Failed to log temporary password email', logError)
+
+  const { error } = await supabaseAdmin.rpc('enqueue_email', {
+    queue_name: 'transactional_emails',
+    payload: {
+      message_id: messageId,
+      to: email,
+      from: 'Elevare Consultoria <noreply@notify.elevareconsultoria.com>',
+      sender_domain: 'notify.elevareconsultoria.com',
+      subject: 'Sua senha provisória',
+      html,
+      text,
+      purpose: 'transactional',
+      label: 'temporary_password',
+      queued_at: new Date().toISOString(),
+    },
+  })
+
+  if (error) {
+    await supabaseAdmin.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: 'temporary_password',
+      recipient_email: email,
+      status: 'failed',
+      error_message: error.message,
+    })
+    throw error
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -87,7 +160,7 @@ serve(async (req) => {
           const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers()
           const user = existingUser.users.find(u => u.email === email)
           if (user && perfil === 'cliente') {
-             await supabaseAdmin.from('profiles').update({ cnpj, senha_texto: password }).eq('id', user.id)
+             await supabaseAdmin.from('profiles').update({ cnpj }).eq('id', user.id)
           }
           
           if (queueId) {
@@ -110,8 +183,7 @@ serve(async (req) => {
           email, 
           perfil, 
           cnpj: perfil === 'cliente' ? cnpj : null, 
-          force_password_change: perfil === 'consultor',
-          senha_texto: password
+          force_password_change: perfil === 'consultor'
         })
         .eq('id', authUser.user.id)
 
@@ -157,8 +229,7 @@ serve(async (req) => {
       if (!isAuthorized) throw new Error('Unauthorized')
       const { userId } = userData
       
-      // Generate a random temporary password (8 characters)
-      const tempPassword = Math.random().toString(36).slice(-8)
+      const tempPassword = generateTemporaryPassword()
       
       console.log(`Resetting password for user ${userId}`)
       const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.updateUserById(
@@ -171,12 +242,11 @@ serve(async (req) => {
         throw authError
       }
       
-      // Update profile to force password change and store temp password
+      // Update profile to force password change
       const { error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({ 
-          force_password_change: true,
-          senha_texto: tempPassword
+          force_password_change: true
         })
         .eq('id', userId)
         
@@ -194,11 +264,7 @@ serve(async (req) => {
           .single()
 
         if (userProfile?.email) {
-          // If you have a custom domain configured, you could use an edge function to send the email
-          // For now, we return it to the UI so the admin can see it, and we try to send via resetPasswordForEmail
-          // but that would invalidate the temp password if they use the link.
-          // Better approach is to use a transactional email if configured.
-          console.log(`Temporary password for ${userProfile.email}: ${tempPassword}`)
+          await enqueueTemporaryPasswordEmail(supabaseAdmin, userProfile.email, tempPassword, userProfile.nome)
         }
       } catch (e) {
         console.error('Error fetching profile for email log:', e)
@@ -228,7 +294,7 @@ serve(async (req) => {
       }
 
       // 2. Generate temp password
-      const tempPassword = Math.random().toString(36).slice(-8)
+      const tempPassword = generateTemporaryPassword()
       
       // 3. Update Auth password
       const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
@@ -241,14 +307,18 @@ serve(async (req) => {
       const { error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({ 
-          force_password_change: true,
-          senha_texto: tempPassword
+          force_password_change: true
         })
         .eq('id', authUser.id)
       if (updateError) throw updateError
 
-      // 5. TODO: Send email (transactional)
-      console.log(`FORGOT PASSWORD: Temp password for ${email}: ${tempPassword}`)
+      // 5. Send email with the temporary password
+      const { data: userProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('nome')
+        .eq('id', authUser.id)
+        .maybeSingle()
+      await enqueueTemporaryPasswordEmail(supabaseAdmin, email, tempPassword, userProfile?.nome)
 
       return new Response(JSON.stringify({ message: 'E-mail enviado com a senha temporária.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
