@@ -248,7 +248,7 @@ export function UserManagement() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs">
-                          {showPasswords[user.id] ? (user.senha_texto || "********") : "********"}
+                          {showPasswords[user.id] ? (user.senha_texto || "Senha não salva") : "********"}
                         </span>
                         <Button 
                           variant="ghost" 
