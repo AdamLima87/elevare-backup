@@ -36,13 +36,10 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           // Parse request body
           let body: any;
           try {
-            const text = await request.text();
-            console.log('Request body text:', text);
-            body = JSON.parse(text);
-          } catch (e: any) {
-            console.error('Failed to parse request body:', e);
+            body = await request.json()
+          } catch {
             return Response.json(
-              { error: 'Invalid JSON in request body: ' + e.message },
+              { error: 'Invalid JSON in request body' },
               { status: 400 }
             )
           }
