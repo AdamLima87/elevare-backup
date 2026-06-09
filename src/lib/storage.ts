@@ -305,6 +305,11 @@ export async function saveToHistorico(insp: Inspecao) {
                 cnpj: cleanCnpj
               }
             }
+          }).then(({ data }) => {
+            if (data && !data.error) {
+              // Custom event to be caught by toast if UI is listening, or just silent
+              console.log("Acesso do cliente garantido na conclusão");
+            }
           });
         }
       }

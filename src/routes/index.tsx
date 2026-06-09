@@ -201,11 +201,16 @@ function IndexPage() {
   };
 
   const iniciar = async () => {
-    const required: (keyof Estabelecimento)[] = ["razaoSocial", "nomeFantasia", "cnpj", "respLegalNome", "dataHora", "email"];
+    const required: (keyof Estabelecimento)[] = ["razaoSocial", "nomeFantasia", "cnpj", "respLegalNome", "dataHora"];
     const missing = required.filter((k) => !estab[k]);
     if (missing.length) {
       toast.error("Preencha os campos obrigatórios antes de iniciar.");
       return;
+    }
+
+    const emailResponsavel = estab.respLegalEmail || estab.email;
+    if (!emailResponsavel) {
+      toast.warning("Adicione o e-mail do responsável para criar o acesso do cliente.");
     }
     
     const loadingToast = toast.loading("Iniciando checklist...");
@@ -218,7 +223,27 @@ function IndexPage() {
       await saveRascunho(insp);
       await saveToHistorico(insp);
       
-      // Clear initial form after starting
+      // Auto-create client if email is present
+      if (emailResponsavel && estab.cnpj) {
+        const cleanCnpj = estab.cnpj.replace(/\D/g, "");
+        supabase.functions.invoke("admin-manage-users", {
+          body: {
+            action: "create_client",
+            userData: {
+              email: emailResponsavel,
+              password: cleanCnpj,
+              nome: estab.nomeFantasia || estab.razaoSocial,
+              perfil: "cliente",
+              cnpj: cleanCnpj
+            }
+          }
+        }).then(({ data }) => {
+          if (data && !data.error) {
+            toast.info("Acesso do cliente criado automaticamente", { duration: 3000 });
+          }
+        });
+      }
+      
       setEstab(emptyEstabelecimento());
       setRascunho(null);
       
@@ -306,6 +331,7 @@ function IndexPage() {
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nome *" value={estab.respLegalNome} onChange={(v) => update("respLegalNome", v)} />
+          <Field label="E-mail do Responsável" type="email" value={estab.respLegalEmail} onChange={(v) => update("respLegalEmail", v)} placeholder="responsavel@exemplo.com" />
           <Field label="CPF" value={estab.respLegalCpf} onChange={(v) => update("respLegalCpf", v)} />
         </CardContent>
       </Card>
