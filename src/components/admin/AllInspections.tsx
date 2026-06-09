@@ -186,7 +186,7 @@ export function AllInspections() {
                             "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
                             insp.status === "concluida" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
                           )}>
-                            {insp.status === "concluida" ? "Concluída" : "Andamento"}
+                            {insp.status === "concluida" ? "Concluída" : "em andamento"}
                           </span>
                         </TableCell>
                         <TableCell>
