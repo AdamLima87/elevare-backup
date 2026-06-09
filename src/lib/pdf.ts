@@ -152,7 +152,7 @@ export async function gerarPDF(insp: Inspecao) {
   // Percentual e Badge
   doc.setFontSize(32);
   doc.setTextColor(26, 77, 46);
-  doc.text(`${score.percentual.toFixed(1)}%`, 20, y + 15);
+  doc.text(`${score.percentual.toFixed(2)}%`, 20, y + 15);
   
   const badgeColor = cls.tone === "success" ? [26, 77, 46] : cls.tone === "warning" ? [234, 179, 8] : [185, 28, 28];
   doc.setFillColor(badgeColor[0], badgeColor[1], badgeColor[2]);

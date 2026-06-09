@@ -159,14 +159,14 @@ function ResultadoPage() {
   };
 
   const compartilharWhats = () => {
-    const msg = `*Checklist Elevare*%0A${insp.estabelecimento}%0APontuação: ${score.percentual.toFixed(1)}%25 - ${cls.label}%0ANão conformidades: ${naoConformidades.length}`;
+    const msg = `*Checklist Elevare*%0A${insp.estabelecimento}%0APontuação: ${score.percentual.toFixed(2)}%25 - ${cls.label}%0ANão conformidades: ${naoConformidades.length}`;
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
   const enviarEmail = () => {
     const subject = encodeURIComponent(`Inspeção sanitária — ${insp.estabelecimento}`);
     const body = encodeURIComponent(
-      `Estabelecimento: ${insp.dados.estabelecimento.razaoSocial}\nPontuação: ${score.percentual.toFixed(1)}% — ${cls.label}\nNão conformidades: ${naoConformidades.length}`,
+      `Estabelecimento: ${insp.dados.estabelecimento.razaoSocial}\nPontuação: ${score.percentual.toFixed(2)}% — ${cls.label}\nNão conformidades: ${naoConformidades.length}`,
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
@@ -194,7 +194,7 @@ function ResultadoPage() {
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div>
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Pontuação geral</div>
-              <div className="mt-1 text-5xl font-bold tracking-tight">{score.percentual.toFixed(1)}%</div>
+              <div className="mt-1 text-5xl font-bold tracking-tight">{score.percentual.toFixed(2)}%</div>
               <div className="mt-1 text-sm text-muted-foreground">
                 {score.sim} conformes · {score.nao} não conformes · {score.na} não se aplica
               </div>
