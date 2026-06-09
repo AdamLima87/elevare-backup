@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, UserPlus, Power, RotateCcw } from "lucide-react";
+import { Loader2, UserPlus, Power, RotateCcw, Eye, EyeOff, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function UserManagement() {
@@ -37,6 +37,8 @@ export function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+
 
   // New user form state
   const [newUser, setNewUser] = useState({
@@ -50,19 +52,20 @@ export function UserManagement() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.functions.invoke("admin-manage-users", {
+        body: { action: "list_with_auth" }
+      });
 
       if (error) throw error;
-      setUsers(data || []);
+      setUsers(data.users || []);
     } catch (error: any) {
+      console.error("Error fetching users:", error);
       toast.error("Erro ao carregar usuários");
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchUsers();
@@ -220,7 +223,10 @@ export function UserManagement() {
                   <TableHead>Nome</TableHead>
                   <TableHead>E-mail</TableHead>
                   <TableHead>Perfil</TableHead>
+                  <TableHead>Senha</TableHead>
+                  <TableHead>Último Acesso</TableHead>
                   <TableHead>Status</TableHead>
+
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -240,12 +246,34 @@ export function UserManagement() {
                       </span>
                     </TableCell>
                     <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs">
+                          {showPasswords[user.id] ? (user.senha_texto || "********") : "********"}
+                        </span>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6"
+                          onClick={() => setShowPasswords(prev => ({...prev, [user.id]: !prev[user.id]}))}
+                        >
+                          {showPasswords[user.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        {user.last_login ? new Date(user.last_login).toLocaleString("pt-BR") : "Nunca"}
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <span className={cn(
                         "h-2 w-2 rounded-full inline-block mr-2",
                         user.ativo ? "bg-green-500" : "bg-red-500"
                       )} />
                       {user.ativo ? "Ativo" : "Inativo"}
                     </TableCell>
+
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button 
