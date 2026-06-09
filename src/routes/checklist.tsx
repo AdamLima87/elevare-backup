@@ -75,6 +75,12 @@ function ChecklistContent() {
         const next = updater(cur);
         const totalAnswers = Object.keys(next.respostas || {}).length;
         next.progresso = Math.round((totalAnswers / totalChecklistItems) * 100);
+        
+        // If status was already "concluida", change it back to "em_andamento" on any modification
+        if (next.status === "concluida") {
+          next.status = "em_andamento";
+        }
+        
         saveRascunho(next);
         saveToHistorico(next);
         return next;
