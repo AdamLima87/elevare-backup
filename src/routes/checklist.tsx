@@ -25,7 +25,8 @@ import {
   type Inspecao,
   type Resposta,
 } from "@/lib/storage";
-import { ArrowRight, Camera, Plus, X, Trash2 } from "lucide-react";
+import { ArrowRight, Camera, Plus, X, Trash2, RefreshCw } from "lucide-react";
+import { SyncStatus } from "@/components/elevare/SyncStatus";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/checklist")({
@@ -112,9 +113,14 @@ function ChecklistContent() {
     return (
       <AppShell>
         <Toaster richColors position="top-center" />
-        <div className="mb-4">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Inspeção</div>
-          <h1 className="text-xl font-semibold">{insp.estabelecimento || insp.dados?.estabelecimento?.nomeFantasia || "Sem nome"}</h1>
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center justify-between sm:justify-start sm:gap-4 mb-1">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Inspeção</div>
+              <SyncStatus />
+            </div>
+            <h1 className="text-xl font-semibold">{insp.estabelecimento || insp.dados?.estabelecimento?.nomeFantasia || "Sem nome"}</h1>
+          </div>
           <div className="mt-3 flex items-center gap-3">
             <Progress value={progresso} className="h-2 flex-1" />
             <span className="text-xs font-medium text-muted-foreground">
