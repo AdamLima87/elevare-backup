@@ -94,6 +94,7 @@ function ResultadoPage() {
         dataConclusao: r.dataConclusao || new Date().toISOString()
       };
       
+      // Update local storage and state without forcing status change
       saveToHistorico(finalInsp);
       setInsp(finalInsp);
     }
