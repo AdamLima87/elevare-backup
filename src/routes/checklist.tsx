@@ -144,7 +144,13 @@ function ChecklistContent() {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(v) => {
+          if (v === "b" && respondidos < totalChecklistItems) {
+            toast.error("Complete todos os itens do Apêndice A antes de prosseguir para o Apêndice B.");
+            return;
+          }
+          setActiveTab(v);
+        }}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="a">Apêndice A — Verificação</TabsTrigger>
             <TabsTrigger 
@@ -152,7 +158,7 @@ function ChecklistContent() {
               disabled={respondidos < totalChecklistItems}
               title={respondidos < totalChecklistItems ? "Complete todos os itens do Apêndice A primeiro" : ""}
             >
-              Apêndice B — Questionário
+              Apêndice B — Questionário Socioeconômico
             </TabsTrigger>
           </TabsList>
 
@@ -167,20 +173,17 @@ function ChecklistContent() {
 
           <TabsContent value="b" className="mt-4">
             <ApendiceB insp={insp} persist={persist} />
+            <div className="mt-6 flex justify-end">
+              <Button 
+                size="lg" 
+                onClick={finalizar} 
+                className="gap-2"
+              >
+                Finalizar e ver resultado <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
-
-        {activeTab === "b" && (
-          <div className="mt-6 flex justify-end">
-            <Button 
-              size="lg" 
-              onClick={finalizar} 
-              className="gap-2"
-            >
-              Finalizar e ver resultado <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
       </AppShell>
     );
   } catch (renderError) {
