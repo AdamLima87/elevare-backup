@@ -84,13 +84,20 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
         let idempotencyKey: string
         let messageId: string
         let templateData: Record<string, any> = {}
-        
-        templateName = body.templateName || body.template_name
-        recipientEmail = body.recipientEmail || body.recipient_email
-        messageId = crypto.randomUUID()
-        idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
-        if (body.templateData && typeof body.templateData === 'object') {
-          templateData = body.templateData
+        try {
+          const body = await request.json()
+          templateName = body.templateName || body.template_name
+          recipientEmail = body.recipientEmail || body.recipient_email
+          messageId = crypto.randomUUID()
+          idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
+          if (body.templateData && typeof body.templateData === 'object') {
+            templateData = body.templateData
+          }
+        } catch {
+          return Response.json(
+            { error: 'Invalid JSON in request body' },
+            { status: 400 }
+          )
         }
 
         if (!templateName) {
