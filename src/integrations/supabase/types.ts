@@ -98,6 +98,24 @@ export type Database = {
         }
         Relationships: []
       }
+      numeracao_inspecoes: {
+        Row: {
+          id: number
+          numeros_disponiveis: number[] | null
+          ultimo_numero: number | null
+        }
+        Insert: {
+          id?: number
+          numeros_disponiveis?: number[] | null
+          ultimo_numero?: number | null
+        }
+        Update: {
+          id?: number
+          numeros_disponiveis?: number[] | null
+          ultimo_numero?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           ativo: boolean
