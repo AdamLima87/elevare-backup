@@ -64,7 +64,8 @@ async function enqueueTemporaryPasswordEmail(
       purpose: 'transactional',
       label: 'temporary_password',
       queued_at: new Date().toISOString(),
-      idempotency_key: messageId, // Critical: Providing idempotency_key for transactional emails
+      idempotency_key: messageId,
+      unsubscribe_token: messageId, // Critical: Transactional emails require an unsubscribe_token
     },
   })
 
