@@ -17,26 +17,44 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    console.log('Request received:', req.method)
     const authHeader = req.headers.get('Authorization')
     let isAuthorized = false
 
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '')
       const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
-      if (!userError && user) {
-        const { data: profile } = await supabaseAdmin
+      
+      if (userError) {
+        console.error('Auth error:', userError)
+      }
+
+      if (user) {
+        console.log('User identified:', user.id)
+        const { data: profile, error: profileError } = await supabaseAdmin
           .from('profiles')
           .select('perfil')
           .eq('id', user.id)
           .single()
 
+        if (profileError) {
+          console.error('Profile error:', profileError)
+        }
+
+        console.log('User profile:', profile)
         if (profile?.perfil === 'admin' || profile?.perfil === 'consultor') {
           isAuthorized = true
         }
+      } else {
+        console.warn('No user found for token')
       }
+    } else {
+      console.warn('No Authorization header')
     }
 
-    const { action, userData, queueId } = await req.json()
+    const body = await req.json()
+    console.log('Request body:', body)
+    const { action, userData, queueId } = body
 
     // Internal system actions or admin actions
     if (action === 'create_client' || action === 'create') {
