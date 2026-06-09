@@ -126,33 +126,56 @@ export function emptyFuncionario(): Funcionario {
   };
 }
 
-function getNextNumero(): number {
-  if (typeof localStorage === "undefined") return 1;
-  const raw = localStorage.getItem(NUMEROS_DISPONIVEIS_KEY);
-  const disponiveis = JSON.parse(raw || "[]") as number[];
-  
-  if (disponiveis.length > 0) {
-    const menor = Math.min(...disponiveis);
-    const novosDisponiveis = disponiveis.filter((n) => n !== menor);
-    localStorage.setItem(NUMEROS_DISPONIVEIS_KEY, JSON.stringify(novosDisponiveis));
+async function getNextNumero(): Promise<number> {
+  // 1. Tentar pegar da tabela numeracao_inspecoes
+  const { data, error } = await supabase
+    .from("numeracao_inspecoes")
+    .select("*")
+    .eq("id", 1)
+    .single();
+
+  if (error || !data) {
+    return 1;
+  }
+
+  const { ultimo_numero, numeros_disponiveis = [] } = data;
+
+  if (numeros_disponiveis.length > 0) {
+    const menor = Math.min(...numeros_disponiveis);
+    const novosDisponiveis = numeros_disponiveis.filter((n) => n !== menor);
+    
+    await supabase
+      .from("numeracao_inspecoes")
+      .update({ numeros_disponiveis: novosDisponiveis })
+      .eq("id", 1);
+      
     return menor;
   }
-  
-  const rawProx = localStorage.getItem(PROXIMO_NUMERO_KEY);
-  const proximo = parseInt(rawProx || "1", 10);
-  localStorage.setItem(PROXIMO_NUMERO_KEY, (proximo + 1).toString());
+
+  const proximo = ultimo_numero + 1;
+  await supabase
+    .from("numeracao_inspecoes")
+    .update({ ultimo_numero: proximo })
+    .eq("id", 1);
+    
   return proximo;
 }
 
-export function releaseNumero(numero: number) {
-  if (typeof localStorage === "undefined") return;
-  const raw = localStorage.getItem(NUMEROS_DISPONIVEIS_KEY);
-  const disponiveis = JSON.parse(raw || "[]") as number[];
+export async function releaseNumero(numero: number) {
+  const { data } = await supabase
+    .from("numeracao_inspecoes")
+    .select("numeros_disponiveis")
+    .eq("id", 1)
+    .single();
+
+  const disponiveis = data?.numeros_disponiveis || [];
   
   if (!disponiveis.includes(numero)) {
-    disponiveis.push(numero);
-    disponiveis.sort((a, b) => a - b);
-    localStorage.setItem(NUMEROS_DISPONIVEIS_KEY, JSON.stringify(disponiveis));
+    const novosDisponiveis = [...disponiveis, numero].sort((a, b) => a - b);
+    await supabase
+      .from("numeracao_inspecoes")
+      .update({ numeros_disponiveis: novosDisponiveis })
+      .eq("id", 1);
   }
 }
 
@@ -160,10 +183,10 @@ export function formatNumero(n: number) {
   return `#${(n || 0).toString().padStart(3, "0")}`;
 }
 
-export function newInspecao(): Inspecao {
-  const num = getNextNumero();
+export async function createNewInspecao(): Promise<Inspecao> {
+  const num = await getNextNumero();
   return {
-    id: num.toString() + "_" + Date.now(),
+    id: crypto.randomUUID(),
     numero: num,
     status: "em_andamento",
     estabelecimento: "",
@@ -199,20 +222,21 @@ export async function saveRascunho(insp: Inspecao) {
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.user) {
     try {
-      await supabase.from("inspecoes").upsert({
+      const { error } = await supabase.from("inspecoes").upsert({
         id: insp.id,
         consultor_id: session.user.id,
-        numero: insp.numero,
+        numero_sequencial: insp.numero,
         status: insp.status,
         estabelecimento_nome: insp.estabelecimento,
-        cnpj: insp.dados?.estabelecimento?.cnpj || null,
-        data_inicio: insp.dataInicio,
-        data_conclusao: insp.dataConclusao,
+        cnpj: insp.dados?.estabelecimento?.cnpj?.replace(/\D/g, "") || null,
+        data_inspecao: insp.dataInicio,
+        finished_at: insp.dataConclusao,
         progresso: insp.progresso,
         conformidade: insp.conformidade,
         dados: insp.dados as any,
         respostas: insp.respostas as any,
       });
+      if (error) throw error;
     } catch (err) {
       console.error("Failed to sync rascunho to Cloud:", err);
     }
@@ -270,22 +294,23 @@ export async function saveToHistorico(insp: Inspecao) {
       const cnpj = insp.dados?.estabelecimento?.cnpj || null;
       const cleanCnpj = cnpj ? cnpj.replace(/\D/g, "") : null;
       
-      await supabase.from("inspecoes").upsert({
+      const { error } = await supabase.from("inspecoes").upsert({
         id: insp.id,
         consultor_id: session.user.id,
-        numero: insp.numero,
+        numero_sequencial: insp.numero,
         status: insp.status,
         estabelecimento_nome: insp.estabelecimento,
         cnpj: cleanCnpj,
-        data_inicio: insp.dataInicio,
-        data_conclusao: insp.dataConclusao,
+        data_inspecao: insp.dataInicio,
+        finished_at: insp.dataConclusao,
         progresso: insp.progresso,
         conformidade: insp.conformidade,
         dados: insp.dados as any,
         respostas: insp.respostas as any,
       });
+      if (error) throw error;
 
-      // If status changed to concluded, check for client creation queue
+      // If status changed to concluded, check for client creation
       if (insp.status === "concluida") {
         const legalEmail = insp.dados?.estabelecimento?.respLegalEmail || insp.dados?.estabelecimento?.email;
         const legalName = insp.dados?.estabelecimento?.respLegalNome;

@@ -40,12 +40,12 @@ export async function syncFromCloud(silent = false) {
           await supabase.from("inspecoes").upsert({
             id: insp.id,
             consultor_id: session.user.id,
-            numero: insp.numero,
+            numero_sequencial: insp.numero,
             status: insp.status,
             estabelecimento_nome: insp.estabelecimento,
             cnpj: cleanCnpj,
-            data_inicio: insp.dataInicio,
-            data_conclusao: insp.dataConclusao,
+            data_inspecao: insp.dataInicio,
+            finished_at: insp.dataConclusao,
             progresso: insp.progresso,
             conformidade: insp.conformidade,
             dados: insp.dados as any,
@@ -61,7 +61,7 @@ export async function syncFromCloud(silent = false) {
     const { data, error } = await supabase
       .from("inspecoes")
       .select("*")
-      .order("data_inicio", { ascending: false });
+      .order("data_inspecao", { ascending: false });
 
     if (error) {
       console.error("Error fetching from Cloud:", error);
@@ -73,11 +73,11 @@ export async function syncFromCloud(silent = false) {
       const localList = loadHistorico();
       const cloudList: Inspecao[] = data.map(item => ({
         id: item.id,
-        numero: item.numero,
+        numero: item.numero_sequencial,
         status: item.status as any,
         estabelecimento: item.estabelecimento_nome || "",
-        dataInicio: item.data_inicio || new Date().toISOString(),
-        dataConclusao: item.data_conclusao,
+        dataInicio: item.data_inspecao || new Date().toISOString(),
+        dataConclusao: item.finished_at,
         progresso: Number(item.progresso),
         conformidade: item.conformidade ? Number(item.conformidade) : null,
         dados: item.dados as any,

@@ -60,7 +60,7 @@ export function AllInspections() {
         // Mas a regra de RLS no banco já deve cuidar disso se for o caso.
       }
 
-      const { data: inspData, error: inspError } = await query.order("created_at", { ascending: false });
+      const { data: inspData, error: inspError } = await query.order("data_inspecao", { ascending: false });
       if (inspError) throw inspError;
 
       // Fetch all consultant names for the filter and display
@@ -90,7 +90,7 @@ export function AllInspections() {
     return (
       insp.estabelecimento_nome?.toLowerCase().includes(searchLower) ||
       insp.cnpj?.includes(searchLower) ||
-      insp.numero?.toString().includes(searchLower)
+      insp.numero_sequencial?.toString().includes(searchLower)
     );
   });
 
@@ -170,7 +170,7 @@ export function AllInspections() {
                     const cls = insp.status === "concluida" ? classificacao(Number(insp.conformidade)) : null;
                     return (
                       <TableRow key={insp.id}>
-                        <TableCell className="font-mono text-xs font-bold">#{insp.numero.toString().padStart(3, '0')}</TableCell>
+                        <TableCell className="font-mono text-xs font-bold">#{insp.numero_sequencial?.toString().padStart(3, '0')}</TableCell>
                         <TableCell>
                           <div className="font-medium">{insp.estabelecimento_nome}</div>
                           <div className="text-xs text-muted-foreground">{insp.cnpj}</div>
@@ -179,7 +179,7 @@ export function AllInspections() {
                           {profiles[insp.consultor_id] || "N/A"}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {new Date(insp.data_inicio).toLocaleDateString("pt-BR")}
+                          {new Date(insp.data_inspecao).toLocaleDateString("pt-BR")}
                         </TableCell>
                         <TableCell>
                           <span className={cn(
