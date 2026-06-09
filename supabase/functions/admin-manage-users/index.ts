@@ -6,6 +6,79 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+function generateTemporaryPassword(length = 12) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%'
+  const bytes = new Uint8Array(length)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, (byte) => chars[byte % chars.length]).join('')
+}
+
+async function enqueueTemporaryPasswordEmail(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  email: string,
+  tempPassword: string,
+  nome?: string | null,
+) {
+  const safeName = escapeHtml(nome || 'Olá')
+  const safePassword = escapeHtml(tempPassword)
+  const messageId = crypto.randomUUID()
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.5; padding: 24px;">
+      <h1 style="font-size: 22px; margin: 0 0 16px;">Senha provisória</h1>
+      <p>${safeName}, recebemos uma solicitação para redefinir sua senha.</p>
+      <p>Use a senha provisória abaixo para acessar o sistema:</p>
+      <p style="font-size: 20px; font-weight: 700; letter-spacing: 1px; background: #f3f4f6; padding: 12px 16px; border-radius: 6px; display: inline-block;">${safePassword}</p>
+      <p>Ao entrar, você será obrigado a criar uma nova senha.</p>
+      <p style="font-size: 12px; color: #6b7280; margin-top: 24px;">Se você não solicitou essa alteração, entre em contato com o suporte.</p>
+    </div>
+  `
+  const text = `${nome || 'Olá'}, recebemos uma solicitação para redefinir sua senha. Use esta senha provisória para acessar o sistema: ${tempPassword}. Ao entrar, você será obrigado a criar uma nova senha.`
+
+  const { error: logError } = await supabaseAdmin.from('email_send_log').insert({
+    message_id: messageId,
+    template_name: 'temporary_password',
+    recipient_email: email,
+    status: 'pending',
+  })
+  if (logError) console.error('Failed to log temporary password email', logError)
+
+  const { error } = await supabaseAdmin.rpc('enqueue_email', {
+    queue_name: 'transactional_emails',
+    payload: {
+      message_id: messageId,
+      to: email,
+      from: 'Elevare Consultoria <noreply@notify.elevareconsultoria.com>',
+      sender_domain: 'notify.elevareconsultoria.com',
+      subject: 'Sua senha provisória',
+      html,
+      text,
+      purpose: 'transactional',
+      label: 'temporary_password',
+      queued_at: new Date().toISOString(),
+    },
+  })
+
+  if (error) {
+    await supabaseAdmin.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: 'temporary_password',
+      recipient_email: email,
+      status: 'failed',
+      error_message: error.message,
+    })
+    throw error
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
