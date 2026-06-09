@@ -37,20 +37,11 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           let body: any;
           try {
             body = await request.json()
-            console.log('Successfully parsed body:', body);
-          } catch (e: any) {
-            console.error('Failed to parse body with .json():', e);
-            try {
-              const text = await request.text();
-              console.log('Request body text:', text);
-              body = JSON.parse(text);
-            } catch (e2: any) {
-              console.error('Failed to parse body with .text():', e2);
-              return Response.json(
-                { error: 'Invalid JSON in request body' },
-                { status: 400 }
-              )
-            }
+          } catch {
+            return Response.json(
+              { error: 'Invalid JSON in request body' },
+              { status: 400 }
+            )
           }
 
           // Verify the caller has a valid Supabase auth token.
