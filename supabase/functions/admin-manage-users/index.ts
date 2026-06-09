@@ -17,7 +17,14 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const body = await req.json()
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.error('Error parsing request body:', e);
+      throw new Error('Invalid JSON body');
+    }
+    
     console.log('Request received body:', body)
     const { action, userData, queueId } = body
 
@@ -25,12 +32,18 @@ serve(async (req) => {
     let isAuthorized = false
 
     // Skip auth check for forgot_password
-    if (action !== 'forgot_password' && authHeader) {
+    if (action !== 'forgot_password') {
+      if (!authHeader) {
+        console.warn('No Authorization header for protected action')
+        throw new Error('Unauthorized: Missing token')
+      }
+
       const token = authHeader.replace('Bearer ', '')
       const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
       
       if (userError) {
         console.error('Auth error:', userError)
+        throw new Error(`Unauthorized: ${userError.message}`)
       }
 
       if (user) {
