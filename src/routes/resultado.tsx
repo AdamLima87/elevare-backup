@@ -84,13 +84,14 @@ function ResultadoPage() {
         return;
       }
       
-      // Auto-save completion state when arriving at results page
+      // Set status to in_progress when arriving at results if it's the first time
+      // The "concluida" status will only be set when the user clicks "Salvar"
       const score = calcularPercentual(r.respostas);
       const finalInsp: Inspecao = { 
         ...r, 
-        status: "concluida", 
+        status: r.status === "concluida" ? "concluida" : "em_andamento", 
         conformidade: score.percentual,
-        dataConclusao: new Date().toISOString()
+        dataConclusao: r.dataConclusao || new Date().toISOString()
       };
       
       saveToHistorico(finalInsp);
@@ -143,8 +144,13 @@ function ResultadoPage() {
   const finalInsp = insp;
 
   const salvar = () => {
-    saveToHistorico(finalInsp);
-    toast.success("Inspeção salva no histórico.");
+    const updatedInsp: Inspecao = {
+      ...finalInsp,
+      status: "concluida"
+    };
+    saveToHistorico(updatedInsp);
+    setInsp(updatedInsp);
+    toast.success("Inspeção concluída e salva no histórico.");
   };
 
   const novaInspecao = () => {
