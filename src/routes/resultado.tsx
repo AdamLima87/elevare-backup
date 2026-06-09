@@ -84,7 +84,6 @@ function ResultadoPage() {
         return;
       }
       
-      // Always preserve the current status when loading the results page
       // The "concluida" status will only be set when the user clicks "Salvar"
       const score = calcularPercentual(r.respostas);
       const finalInsp: Inspecao = { 
@@ -94,8 +93,6 @@ function ResultadoPage() {
         dataConclusao: r.dataConclusao || new Date().toISOString()
       };
       
-      // Update local storage and state without forcing status change
-      saveToHistorico(finalInsp);
       setInsp(finalInsp);
     }
     
