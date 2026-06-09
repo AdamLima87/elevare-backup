@@ -7,6 +7,7 @@ import { TEMPLATES } from '@/lib/email-templates/registry'
 // Configuration baked in at scaffold time
 const SITE_NAME = "elevate-check-pro"
 const SENDER_DOMAIN = "notify.elevareconsultoria.com"
+const FROM_DOMAIN = "elevareconsultoria.com"
 const FROM_DOMAIN = "notify.elevareconsultoria.com"
 
 function generateToken(): string {
