@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,8 +29,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, UserPlus, Power, RotateCcw, Eye, EyeOff, Clock } from "lucide-react";
+import { Loader2, UserPlus, Power, RotateCcw, Eye, EyeOff, Clock, Search, Shield, User, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
@@ -38,6 +44,7 @@ export function UserManagement() {
   const [submitting, setSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const [searchTerm, setSearchTerm] = useState("");
 
 
   // New user form state
@@ -112,25 +119,29 @@ export function UserManagement() {
     }
   };
 
-  const resetPassword = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      if (error) throw error;
-      toast.success("E-mail de redefinição enviado!");
-    } catch (error: any) {
-      toast.error("Erro ao solicitar redefinição");
-    }
-  };
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => 
+      (user.nome?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (user.email?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Gerenciamento de Usuários</CardTitle>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome ou e-mail..."
+            className="pl-9"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
+
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2 w-full sm:w-auto">
               <UserPlus className="h-4 w-4" /> Novo Usuário
             </Button>
           </DialogTrigger>
@@ -147,6 +158,7 @@ export function UserManagement() {
                   <Label htmlFor="name">Nome Completo</Label>
                   <Input 
                     id="name" 
+                    placeholder="Ex: João da Silva"
                     value={newUser.nome} 
                     onChange={e => setNewUser({...newUser, nome: e.target.value})}
                     required 
@@ -157,19 +169,20 @@ export function UserManagement() {
                   <Input 
                     id="email" 
                     type="email" 
+                    placeholder="exemplo@email.com"
                     value={newUser.email} 
                     onChange={e => setNewUser({...newUser, email: e.target.value})}
                     required 
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password">Senha Temporária</Label>
+                  <Label htmlFor="password">Senha (Deixe vazio para gerar automaticamente)</Label>
                   <Input 
                     id="password" 
-                    type="password" 
+                    type="text" 
+                    placeholder="Opcional"
                     value={newUser.password} 
                     onChange={e => setNewUser({...newUser, password: e.target.value})}
-                    required 
                   />
                 </div>
                 <div className="grid gap-2">
@@ -183,14 +196,14 @@ export function UserManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="consultor">Consultor (senha obrigatória no 1º acesso)</SelectItem>
+                      <SelectItem value="consultor">Consultor</SelectItem>
                       <SelectItem value="cliente">Cliente</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 {newUser.perfil === "cliente" && (
                   <div className="grid gap-2">
-                    <Label htmlFor="cnpj">CNPJ do Estabelecimento</Label>
+                    <Label htmlFor="cnpj">CNPJ do Estabelecimento (Obrigatório para Cliente)</Label>
                     <Input 
                       id="cnpj" 
                       placeholder="00.000.000/0000-00"
@@ -202,106 +215,114 @@ export function UserManagement() {
                 )}
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={submitting}>
+                <Button type="submit" disabled={submitting} className="w-full">
                   {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Criar Usuário"}
                 </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>E-mail</TableHead>
-                  <TableHead>Perfil</TableHead>
-                  <TableHead>Senha</TableHead>
-                  <TableHead>Último Acesso</TableHead>
-                  <TableHead>Status</TableHead>
+      </div>
 
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id} className={!user.ativo ? "opacity-60" : ""}>
-                    <TableCell className="font-medium">{user.nome}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{user.email || user.id}</TableCell>
-                    <TableCell>
-                      <span className={cn(
-                        "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-                        user.perfil === "admin" && "bg-purple-100 text-purple-700",
-                        user.perfil === "consultor" && "bg-blue-100 text-blue-700",
-                        user.perfil === "cliente" && "bg-orange-100 text-orange-700"
-                      )}>
-                        {user.perfil}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs">
-                          {showPasswords[user.id] ? (user.senha_texto || "Senha não salva") : "********"}
-                        </span>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6"
-                          onClick={() => setShowPasswords(prev => ({...prev, [user.id]: !prev[user.id]}))}
-                        >
-                          {showPasswords[user.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {user.last_login ? new Date(user.last_login).toLocaleString("pt-BR") : "Nunca"}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className={cn(
-                        "h-2 w-2 rounded-full inline-block mr-2",
-                        user.ativo ? "bg-green-500" : "bg-red-500"
-                      )} />
-                      {user.ativo ? "Ativo" : "Inativo"}
-                    </TableCell>
-
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => resetPassword(user.email || user.id)}
-                          title="Redefinir Senha"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => toggleStatus(user)}
-                          className={user.ativo ? "text-destructive" : "text-green-600"}
-                          title={user.ativo ? "Desativar" : "Reativar"}
-                        >
-                          <Power className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+      <Card>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="rounded-md">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="font-bold">Nome</TableHead>
+                    <TableHead className="font-bold">E-mail</TableHead>
+                    <TableHead className="font-bold">Perfil</TableHead>
+                    <TableHead className="font-bold text-center">Senha</TableHead>
+                    <TableHead className="font-bold">Criado em</TableHead>
+                    <TableHead className="font-bold">Status</TableHead>
+                    <TableHead className="text-right font-bold">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                        Nenhum usuário encontrado.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <TableRow key={user.id} className={cn("transition-colors", !user.ativo && "opacity-60 bg-muted/20")}>
+                        <TableCell className="font-medium py-4">{user.nome}</TableCell>
+                        <TableCell className="text-sm">{user.email || user.id}</TableCell>
+                        <TableCell>
+                          <div className={cn(
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                            user.perfil === "admin" && "bg-blue-100 text-blue-700",
+                            user.perfil === "consultor" && "bg-green-100 text-green-700",
+                            user.perfil === "cliente" && "bg-orange-100 text-orange-700"
+                          )}>
+                            {user.perfil === "admin" && <Shield className="h-3 w-3" />}
+                            {user.perfil === "consultor" && <User className="h-3 w-3" />}
+                            {user.perfil === "cliente" && <Store className="h-3 w-3" />}
+                            {user.perfil}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 gap-2">
+                                <Eye className="h-4 w-4" /> Opções
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => {
+                                const pass = user.senha_texto || "Não disponível";
+                                toast.info(`Senha atual: ${pass}`, { duration: 5000 });
+                              }}>
+                                <Eye className="mr-2 h-4 w-4" /> Visualizar Senha
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => resetPassword(user.email || user.id)} className="text-primary">
+                                <RotateCcw className="mr-2 h-4 w-4" /> Redefinir Senha
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {user.created_at ? new Date(user.created_at).toLocaleDateString("pt-BR") : "---"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className={cn(
+                              "h-2 w-2 rounded-full",
+                              user.ativo ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-red-500"
+                            )} />
+                            <span className="text-xs font-medium">{user.ativo ? "Ativo" : "Inativo"}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => toggleStatus(user)}
+                            className={cn("h-8 w-8", user.ativo ? "text-destructive hover:bg-destructive/10" : "text-green-600 hover:bg-green-50")}
+                            title={user.ativo ? "Desativar" : "Reativar"}
+                          >
+                            <Power className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
   );
 }
