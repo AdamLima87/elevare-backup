@@ -17,7 +17,7 @@ import { checklistSections, totalChecklistItems } from "@/lib/checklist-data";
 import {
   emptyFuncionario,
   loadRascunho,
-  newInspecao,
+  createNewInspecao,
   saveRascunho,
   saveToHistorico,
   calcularPercentual,

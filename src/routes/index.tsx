@@ -10,7 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import {
   emptyEstabelecimento,
   loadRascunho,
-  newInspecao,
+  createNewInspecao,
   saveRascunho,
   saveToHistorico,
   type Estabelecimento,

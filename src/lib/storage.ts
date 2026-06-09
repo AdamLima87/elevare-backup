@@ -127,9 +127,8 @@ export function emptyFuncionario(): Funcionario {
 }
 
 async function getNextNumero(): Promise<number> {
-  // 1. Tentar pegar da tabela numeracao_inspecoes
   const { data, error } = await supabase
-    .from("numeracao_inspecoes")
+    .from("numeracao_inspecoes" as any)
     .select("*")
     .eq("id", 1)
     .single();
@@ -138,14 +137,14 @@ async function getNextNumero(): Promise<number> {
     return 1;
   }
 
-  const { ultimo_numero, numeros_disponiveis = [] } = data;
+  const { ultimo_numero, numeros_disponiveis = [] } = data as any;
 
   if (numeros_disponiveis.length > 0) {
     const menor = Math.min(...numeros_disponiveis);
-    const novosDisponiveis = numeros_disponiveis.filter((n) => n !== menor);
+    const novosDisponiveis = numeros_disponiveis.filter((n: number) => n !== menor);
     
     await supabase
-      .from("numeracao_inspecoes")
+      .from("numeracao_inspecoes" as any)
       .update({ numeros_disponiveis: novosDisponiveis })
       .eq("id", 1);
       
@@ -154,7 +153,7 @@ async function getNextNumero(): Promise<number> {
 
   const proximo = ultimo_numero + 1;
   await supabase
-    .from("numeracao_inspecoes")
+    .from("numeracao_inspecoes" as any)
     .update({ ultimo_numero: proximo })
     .eq("id", 1);
     
@@ -163,17 +162,17 @@ async function getNextNumero(): Promise<number> {
 
 export async function releaseNumero(numero: number) {
   const { data } = await supabase
-    .from("numeracao_inspecoes")
+    .from("numeracao_inspecoes" as any)
     .select("numeros_disponiveis")
     .eq("id", 1)
     .single();
 
-  const disponiveis = data?.numeros_disponiveis || [];
+  const disponiveis = (data as any)?.numeros_disponiveis || [];
   
   if (!disponiveis.includes(numero)) {
-    const novosDisponiveis = [...disponiveis, numero].sort((a, b) => a - b);
+    const novosDisponiveis = [...disponiveis, numero].sort((a: number, b: number) => a - b);
     await supabase
-      .from("numeracao_inspecoes")
+      .from("numeracao_inspecoes" as any)
       .update({ numeros_disponiveis: novosDisponiveis })
       .eq("id", 1);
   }
@@ -225,12 +224,12 @@ export async function saveRascunho(insp: Inspecao) {
       const { error } = await supabase.from("inspecoes").upsert({
         id: insp.id,
         consultor_id: session.user.id,
-        numero_sequencial: insp.numero,
+        numero: insp.numero,
         status: insp.status,
         estabelecimento_nome: insp.estabelecimento,
         cnpj: insp.dados?.estabelecimento?.cnpj?.replace(/\D/g, "") || null,
-        data_inspecao: insp.dataInicio,
-        finished_at: insp.dataConclusao,
+        data_inicio: insp.dataInicio,
+        data_conclusao: insp.dataConclusao,
         progresso: insp.progresso,
         conformidade: insp.conformidade,
         dados: insp.dados as any,
@@ -297,12 +296,12 @@ export async function saveToHistorico(insp: Inspecao) {
       const { error } = await supabase.from("inspecoes").upsert({
         id: insp.id,
         consultor_id: session.user.id,
-        numero_sequencial: insp.numero,
+        numero: insp.numero,
         status: insp.status,
         estabelecimento_nome: insp.estabelecimento,
         cnpj: cleanCnpj,
-        data_inspecao: insp.dataInicio,
-        finished_at: insp.dataConclusao,
+        data_inicio: insp.dataInicio,
+        data_conclusao: insp.dataConclusao,
         progresso: insp.progresso,
         conformidade: insp.conformidade,
         dados: insp.dados as any,
