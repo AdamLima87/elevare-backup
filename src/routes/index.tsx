@@ -89,7 +89,16 @@ function IndexPage() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    const syncInterval = setInterval(() => {
+      if (user && !syncing) {
+        handleSync();
+      }
+    }, 60000); // Sync every minute
+
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(syncInterval);
+    };
   }, [navigate]);
 
   if (checkingAuth) {
@@ -101,15 +110,16 @@ function IndexPage() {
   }
 
 
-  const handleSync = async () => {
-    setSyncing(true);
+  const handleSync = async (silent = true) => {
+    if (!silent) setSyncing(true);
     try {
-      await syncFromCloud();
-      toast.success("Dados sincronizados com a nuvem!");
+      await syncFromCloud(silent);
+      if (!silent) toast.success("Dados sincronizados com a nuvem!");
     } catch (err) {
       console.error("Sync error:", err);
+      if (!silent) toast.error("Erro na sincronização");
     } finally {
-      setSyncing(false);
+      if (!silent) setSyncing(false);
     }
   };
 
@@ -119,8 +129,14 @@ function IndexPage() {
 
 
   const handleLogout = async () => {
+    setSyncing(true);
+    try {
+      await syncFromCloud();
+    } catch (err) {
+      console.error("Final sync error:", err);
+    }
     await supabase.auth.signOut();
-    toast.success("Sessão encerrada");
+    toast.success("Sessão encerrada e dados sincronizados");
   };
 
   const formatCNPJ = (value: string) => {
