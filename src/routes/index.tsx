@@ -77,7 +77,9 @@ function IndexPage() {
         // Admins might want to stay here or go to /admin
       }
 
-      handleSync();
+      if (profileData.perfil !== "cliente") {
+        handleSync();
+      }
     }
 
     checkAuth();
@@ -112,10 +114,13 @@ function IndexPage() {
 
 
   const handleSync = async (silent = true) => {
+    if (syncing) return;
     if (!silent) setSyncing(true);
     try {
       await syncFromCloud(silent);
-      if (!silent) toast.success("Dados sincronizados com a nuvem!");
+      if (!silent) {
+        toast.success("Dados sincronizados com a nuvem!");
+      }
     } catch (err) {
       console.error("Sync error:", err);
       if (!silent) toast.error("Erro na sincronização");
