@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -18,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, FileText, Trash2 } from "lucide-react";
+import { Loader2, Search, FileText, Trash2, Mail } from "lucide-react";
 import { classificacao, deleteFromHistorico } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
@@ -35,6 +36,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+
+
 export function AllInspections() {
   const [inspections, setInspections] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Record<string, string>>({});
@@ -44,6 +47,7 @@ export function AllInspections() {
     status: "all",
     search: "",
   });
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchData = async () => {
@@ -114,6 +118,45 @@ export function AllInspections() {
     } catch (error) {
       console.error("Error deleting inspection:", error);
       toast.error("Erro ao excluir inspeção");
+    }
+  };
+
+  const handleResendEmail = async (insp: any) => {
+    const email = insp.dados?.estabelecimento?.respLegalEmail || insp.dados?.estabelecimento?.email;
+    const cnpj = insp.cnpj || insp.dados?.estabelecimento?.cnpj || "";
+    
+    if (!email) {
+      toast.error("E-mail do cliente não encontrado.");
+      return;
+    }
+
+    setSendingEmail(insp.id);
+    try {
+      const conf = Number(insp.conformidade);
+      const cls = {
+        label: conf >= 76 ? "BOM" : conf >= 51 ? "REGULAR" : "RUIM",
+        tone: conf >= 76 ? "success" : conf >= 51 ? "warning" : "destructive"
+      };
+
+      const { error } = await supabase.functions.invoke("enviar-email-inspecao", {
+        body: {
+          email_cliente: email,
+          nome_estabelecimento: insp.estabelecimento_nome,
+          cnpj: cnpj,
+          data_inspecao: insp.data_inicio,
+          conformidade: insp.conformidade,
+          classificacao: cls,
+          link_resultado: `${window.location.origin}/meu-resultado`
+        }
+      });
+
+      if (error) throw error;
+      toast.success(`Relatório reenviado para ${email}`);
+    } catch (error) {
+      console.error("Error resending email:", error);
+      toast.error("Erro ao reenviar e-mail.");
+    } finally {
+      setSendingEmail(null);
     }
   };
 
@@ -228,12 +271,27 @@ export function AllInspections() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
+                            {insp.status === "concluida" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleResendEmail(insp)}
+                                disabled={sendingEmail === insp.id}
+                                title="Reenviar e-mail"
+                              >
+                                {sendingEmail === insp.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Mail className="h-4 w-4" />
+                                )}
+                              </Button>
+                            )}
                             <Button 
                               variant="ghost" 
                               size="sm" 
                               onClick={() => navigate({ to: "/resultado", search: { id: insp.id, readonly: true } })}
                             >
-                              <FileText className="h-4 w-4 mr-2" /> Ver
+                              <FileText className="h-4 w-4" />
                             </Button>
 
                             <AlertDialog>
@@ -282,6 +340,3 @@ export function AllInspections() {
   );
 }
 
-function Label({ children, className }: { children: React.ReactNode, className?: string }) {
-  return <label className={cn("text-xs font-medium text-muted-foreground mb-1 block", className)}>{children}</label>;
-}
