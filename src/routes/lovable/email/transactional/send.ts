@@ -44,7 +44,7 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
           )
         }
 
-        // Parse request body early to check for test flag
+        // Parse request body
         let body: any;
         try {
           body = await request.json()
@@ -75,6 +75,7 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
         }
         
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
 
 
         // Parse request body
