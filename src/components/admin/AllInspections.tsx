@@ -169,6 +169,33 @@ export function AllInspections() {
       setSendingEmail(null);
     }
   };
+
+  const handleCreateClientAccess = async (insp: any) => {
+    const email = insp.dados?.estabelecimento?.respLegalEmail || insp.dados?.estabelecimento?.email;
+    const cnpj = (insp.cnpj || insp.dados?.estabelecimento?.cnpj || "").replace(/\D/g, "");
+    const nome = insp.dados?.estabelecimento?.respLegalNome || insp.estabelecimento_nome;
+
+    if (!email || !cnpj) {
+      toast.error("E-mail ou CNPJ não encontrados para gerar acesso.");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-manage-users", {
+        body: {
+          action: "create_client",
+          userData: { email, password: cnpj, nome, perfil: "cliente", cnpj }
+        }
+      });
+
+      if (error) throw error;
+      toast.success("Acesso do cliente gerado com sucesso!");
+      fetchData(); // Atualiza a lista (embora nesta tela mostre inspeções, pode ser útil se houvesse indicador)
+    } catch (error: any) {
+      console.error("Error creating client access:", error);
+      toast.error("Erro ao gerar acesso do cliente.");
+    }
+  };
   
   const handleEdit = (insp: any) => {
     // Para editar uma inspeção concluída, vamos carregar ela no rascunho
