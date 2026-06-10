@@ -55,7 +55,7 @@ function ChecklistContent() {
       let r = loadRascunho();
       if (!r) {
         toast.error("Preencha os dados do estabelecimento para iniciar.");
-        navigate({ to: "/" });
+        navigate({ to: "/nova-inspecao" });
         return;
       }
       setInsp(r);
