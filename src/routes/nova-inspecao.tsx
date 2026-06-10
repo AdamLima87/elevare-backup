@@ -170,7 +170,7 @@ function IndexPage() {
         data.complemento
       ].filter(Boolean).join(", ");
 
-      setEstab((s) => ({
+      setEstab((s: Estabelecimento) => ({
         ...s,
         razaoSocial: data.razao_social || s.razaoSocial,
         nomeFantasia: data.nome_fantasia || data.razao_social || s.nomeFantasia,
