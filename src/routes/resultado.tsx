@@ -80,7 +80,7 @@ function ResultadoPage() {
 
       const r = loadRascunho();
       if (!r || !r.dados.estabelecimento.razaoSocial) {
-        navigate({ to: "/" });
+        navigate({ to: "/nova-inspecao" });
         return;
       }
       
