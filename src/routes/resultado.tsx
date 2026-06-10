@@ -58,7 +58,7 @@ function ResultadoPage() {
           if (data) {
             const mapped: Inspecao = {
               id: data.id,
-              numero: data.numero,
+              numero_sequencial: data.numero_sequencial,
               status: data.status as any,
               estabelecimento: data.estabelecimento_nome || "",
               dataInicio: data.data_inicio,

@@ -40,7 +40,7 @@ export async function syncFromCloud(silent = false) {
           await supabase.from("inspecoes").upsert({
             id: insp.id,
             consultor_id: session.user.id,
-            numero: insp.numero,
+            numero_sequencial: insp.numero_sequencial,
             status: insp.status,
             estabelecimento_nome: insp.estabelecimento,
             cnpj: cleanCnpj,
@@ -73,7 +73,7 @@ export async function syncFromCloud(silent = false) {
       const localList = loadHistorico();
       const cloudList: Inspecao[] = data.map(item => ({
         id: item.id,
-        numero: item.numero,
+        numero_sequencial: item.numero_sequencial,
         status: item.status as any,
         estabelecimento: item.estabelecimento_nome || "",
         dataInicio: item.data_inicio || new Date().toISOString(),
