@@ -338,19 +338,30 @@ export function AllInspections() {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             {insp.status === "concluida" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleResendEmail(insp)}
-                                disabled={sendingEmail === insp.id}
-                                title="Reenviar e-mail"
-                              >
-                                {sendingEmail === insp.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Mail className="h-4 w-4" />
-                                )}
-                              </Button>
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleCreateClientAccess(insp)}
+                                  title="Gerar/Atualizar acesso do cliente"
+                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                >
+                                  <UserPlus className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleResendEmail(insp)}
+                                  disabled={sendingEmail === insp.id}
+                                  title="Reenviar e-mail"
+                                >
+                                  {sendingEmail === insp.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Mail className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </>
                             )}
                             
                             <Button
