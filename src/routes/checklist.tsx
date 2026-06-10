@@ -62,7 +62,7 @@ function ChecklistContent() {
     } catch (e) {
       console.error("Erro ao carregar inspeção:", e);
       toast.error("Erro ao carregar dados.");
-      navigate({ to: "/" });
+      navigate({ to: "/nova-inspecao" });
     }
   }, [navigate]);
 
