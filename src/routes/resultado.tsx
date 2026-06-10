@@ -152,12 +152,36 @@ function ResultadoPage() {
       await saveToHistorico(updatedInsp);
       setInsp(updatedInsp);
       
-      // Enviar e-mail automático
+      // Enviar e-mail automático e garantir acesso do cliente
       const email = updatedInsp.dados?.estabelecimento?.respLegalEmail || updatedInsp.dados?.estabelecimento?.email;
-      const cnpj = updatedInsp.dados?.estabelecimento?.cnpj || "";
+      const cnpj = updatedInsp.dados?.estabelecimento?.cnpj?.replace(/\D/g, "") || "";
+      const nomeLegal = updatedInsp.dados?.estabelecimento?.respLegalNome || updatedInsp.estabelecimento;
       
-      if (email) {
+      console.log("Iniciando processos pós-conclusão para:", email);
+
+      if (email && cnpj) {
         try {
+          // 1. Garantir que o cliente tem um usuário no sistema
+          const clientResponse = await supabase.functions.invoke("admin-manage-users", {
+            body: {
+              action: "create_client",
+              userData: {
+                email,
+                password: cnpj,
+                nome: nomeLegal,
+                perfil: "cliente",
+                cnpj
+              }
+            }
+          });
+
+          if (clientResponse.error) {
+            console.error("Erro ao criar/atualizar cliente:", clientResponse.error);
+          } else {
+            console.log("Acesso do cliente garantido");
+          }
+
+          // 2. Enviar e-mail
           const response = await fetch('/lovable/email/transactional/send', {
             method: 'POST',
             headers: {
@@ -183,8 +207,8 @@ function ResultadoPage() {
           if (!response.ok) throw new Error('Falha ao enviar e-mail');
           toast.success(`Relatório enviado por e-mail para ${email}`);
         } catch (emailErr) {
-          console.error("Erro ao enviar e-mail:", emailErr);
-          toast.error("Não foi possível enviar o e-mail. O relatório está disponível no app.");
+          console.error("Erro nos processos pós-conclusão:", emailErr);
+          toast.error("Não foi possível processar todos os envios automáticos.");
         }
       }
       
