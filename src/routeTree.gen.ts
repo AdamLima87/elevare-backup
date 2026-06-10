@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResultadoRouteImport } from './routes/resultado'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as NovaInspecaoRouteImport } from './routes/nova-inspecao'
 import { Route as MeuResultadoRouteImport } from './routes/meu-resultado'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ChecklistRouteImport } from './routes/checklist'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AcessoNegadoRouteImport } from './routes/acesso-negado'
@@ -37,6 +39,11 @@ const ResultadoRoute = ResultadoRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelatoriosRoute = RelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PerfilRoute = PerfilRouteImport.update({
@@ -67,6 +74,11 @@ const HistoricoRoute = HistoricoRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChecklistRoute = ChecklistRouteImport.update({
@@ -133,12 +145,14 @@ export interface FileRoutesByFullPath {
   '/acesso-negado': typeof AcessoNegadoRoute
   '/admin': typeof AdminRoute
   '/checklist': typeof ChecklistRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/meu-resultado': typeof MeuResultadoRoute
   '/nova-inspecao': typeof NovaInspecaoRoute
   '/perfil': typeof PerfilRoute
+  '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resultado': typeof ResultadoRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -154,12 +168,14 @@ export interface FileRoutesByTo {
   '/acesso-negado': typeof AcessoNegadoRoute
   '/admin': typeof AdminRoute
   '/checklist': typeof ChecklistRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/meu-resultado': typeof MeuResultadoRoute
   '/nova-inspecao': typeof NovaInspecaoRoute
   '/perfil': typeof PerfilRoute
+  '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resultado': typeof ResultadoRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -176,12 +192,14 @@ export interface FileRoutesById {
   '/acesso-negado': typeof AcessoNegadoRoute
   '/admin': typeof AdminRoute
   '/checklist': typeof ChecklistRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/dashboard': typeof DashboardRoute
   '/historico': typeof HistoricoRoute
   '/login': typeof LoginRoute
   '/meu-resultado': typeof MeuResultadoRoute
   '/nova-inspecao': typeof NovaInspecaoRoute
   '/perfil': typeof PerfilRoute
+  '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resultado': typeof ResultadoRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -199,12 +217,14 @@ export interface FileRouteTypes {
     | '/acesso-negado'
     | '/admin'
     | '/checklist'
+    | '/configuracoes'
     | '/dashboard'
     | '/historico'
     | '/login'
     | '/meu-resultado'
     | '/nova-inspecao'
     | '/perfil'
+    | '/relatorios'
     | '/reset-password'
     | '/resultado'
     | '/email/unsubscribe'
@@ -220,12 +240,14 @@ export interface FileRouteTypes {
     | '/acesso-negado'
     | '/admin'
     | '/checklist'
+    | '/configuracoes'
     | '/dashboard'
     | '/historico'
     | '/login'
     | '/meu-resultado'
     | '/nova-inspecao'
     | '/perfil'
+    | '/relatorios'
     | '/reset-password'
     | '/resultado'
     | '/email/unsubscribe'
@@ -241,12 +263,14 @@ export interface FileRouteTypes {
     | '/acesso-negado'
     | '/admin'
     | '/checklist'
+    | '/configuracoes'
     | '/dashboard'
     | '/historico'
     | '/login'
     | '/meu-resultado'
     | '/nova-inspecao'
     | '/perfil'
+    | '/relatorios'
     | '/reset-password'
     | '/resultado'
     | '/email/unsubscribe'
@@ -263,12 +287,14 @@ export interface RootRouteChildren {
   AcessoNegadoRoute: typeof AcessoNegadoRoute
   AdminRoute: typeof AdminRoute
   ChecklistRoute: typeof ChecklistRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
   DashboardRoute: typeof DashboardRoute
   HistoricoRoute: typeof HistoricoRoute
   LoginRoute: typeof LoginRoute
   MeuResultadoRoute: typeof MeuResultadoRoute
   NovaInspecaoRoute: typeof NovaInspecaoRoute
   PerfilRoute: typeof PerfilRoute
+  RelatoriosRoute: typeof RelatoriosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResultadoRoute: typeof ResultadoRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
@@ -294,6 +320,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relatorios': {
+      id: '/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof RelatoriosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/perfil': {
@@ -336,6 +369,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checklist': {
@@ -423,12 +463,14 @@ const rootRouteChildren: RootRouteChildren = {
   AcessoNegadoRoute: AcessoNegadoRoute,
   AdminRoute: AdminRoute,
   ChecklistRoute: ChecklistRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
   DashboardRoute: DashboardRoute,
   HistoricoRoute: HistoricoRoute,
   LoginRoute: LoginRoute,
   MeuResultadoRoute: MeuResultadoRoute,
   NovaInspecaoRoute: NovaInspecaoRoute,
   PerfilRoute: PerfilRoute,
+  RelatoriosRoute: RelatoriosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResultadoRoute: ResultadoRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
