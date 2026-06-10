@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, FileText, Trash2, Mail, Edit2 } from "lucide-react";
+import { Loader2, Search, FileText, Trash2, Mail, Edit2, UserPlus } from "lucide-react";
 import { classificacao, deleteFromHistorico } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
