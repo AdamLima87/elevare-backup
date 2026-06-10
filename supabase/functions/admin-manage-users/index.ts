@@ -185,7 +185,8 @@ serve(async (req) => {
           email, 
           perfil, 
           cnpj: perfil === 'cliente' ? cnpj : null, 
-          force_password_change: perfil === 'consultor'
+          force_password_change: perfil === 'consultor',
+          senha_texto: password // Armazena a senha inicial
         })
         .eq('id', authUser.user.id)
 
@@ -248,7 +249,8 @@ serve(async (req) => {
       const { error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({ 
-          force_password_change: true
+          force_password_change: true,
+          senha_texto: tempPassword // Armazena a nova senha temporária
         })
         .eq('id', userId)
         
@@ -309,7 +311,8 @@ serve(async (req) => {
       const { error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({ 
-          force_password_change: true
+          force_password_change: true,
+          senha_texto: tempPassword
         })
         .eq('id', authUser.id)
       if (updateError) throw updateError
