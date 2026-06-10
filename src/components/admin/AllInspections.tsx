@@ -223,7 +223,7 @@ export function AllInspections() {
     }
   };
   
-  const handleEdit = (insp: any) => {
+  const handleEdit = async (insp: any) => {
     // Para editar uma inspeção concluída, vamos carregar ela no rascunho
     // e mudar seu status para 'em_andamento'
     const mapped: any = {
@@ -245,8 +245,8 @@ export function AllInspections() {
       respostas: insp.respostas || {},
     };
     
-    // Salva no localStorage como rascunho atual
-    localStorage.setItem("elevare_rascunho", JSON.stringify(mapped));
+    // Salva usando o helper
+    await saveRascunho(mapped);
     
     // Navega para a primeira etapa da inspeção
     toast.info("Carregando inspeção para edição...");
