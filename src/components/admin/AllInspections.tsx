@@ -55,11 +55,15 @@ export function AllInspections() {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData.session?.user;
+      if (!user) throw new Error("No session");
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("perfil")
-        .eq("id", user?.id || "")
+        .eq("id", user.id)
         .single();
+
+      const isAdmin = profile?.perfil === "admin";
 
       // Fetch inspections
       let query = supabase.from("inspecoes").select("*");
@@ -70,10 +74,9 @@ export function AllInspections() {
       
       if (filter.consultant !== "all") {
         query = query.eq("consultor_id", filter.consultant);
-      } else if (profile?.perfil === "consultor") {
-        // Consultores só veem as suas próprias por padrão se não filtrado? 
-        // Na verdade, o histórico deve mostrar tudo se for o componente unificado.
-        // Mas a regra de RLS no banco já deve cuidar disso se for o caso.
+      } else if (!isAdmin) {
+        // Consultores só veem as suas próprias
+        query = query.eq("consultor_id", user.id);
       }
 
       const { data: inspData, error: inspError } = await query.order("data_inicio", { ascending: false });

@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AppShell } from "@/components/elevare/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,8 +34,16 @@ export const Route = createFileRoute("/nova-inspecao")({
       { name: "description", content: "Inicie um novo diagnóstico sanitário." },
     ],
   }),
-  component: IndexPage,
+  component: IndexPageWrapper,
 });
+
+function IndexPageWrapper() {
+  return (
+    <ProtectedRoute allowedProfiles={["admin", "consultor"]}>
+      <IndexPage />
+    </ProtectedRoute>
+  );
+}
 
 function IndexPage() {
   const navigate = useNavigate();
@@ -44,7 +53,6 @@ function IndexPage() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [syncing, setSyncing] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const { edit } = Route.useSearch();
 
@@ -62,72 +70,38 @@ function IndexPage() {
       }
     }
 
-
-    async function checkAuth() {
+    async function initialize() {
       const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate({ to: "/login" });
-        return;
-      }
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
-      if (!profileData || !profileData.ativo) {
-        await supabase.auth.signOut();
-        navigate({ to: "/login" });
-        return;
-      }
-
-      setUser(session.user);
-      setProfile(profileData);
-      setCheckingAuth(false);
-
-      if (profileData.perfil === "cliente") {
-        navigate({ to: "/meu-resultado" });
-      } else if (profileData.perfil === "admin") {
-        // Admins might want to stay here or go to /admin
-      }
-
-      if (profileData.perfil !== "cliente") {
-        handleSync();
+      if (session) {
+        setUser(session.user);
+        
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+        
+        if (profileData) {
+          setProfile(profileData);
+          if (profileData.perfil !== "cliente") {
+            handleSync(true); // Always silent on mount
+          }
+        }
       }
     }
 
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        navigate({ to: "/login" });
-      } else {
-        checkAuth();
-      }
-    });
+    initialize();
 
     const syncInterval = setInterval(() => {
-      if (user && !syncing) {
-        handleSync();
-      }
-    }, 60000); // Sync every minute
+      // Use profile from state or re-fetch session if needed, 
+      // but interval should only run if user is logged in
+      handleSync(true); // Always silent on interval
+    }, 60000);
 
     return () => {
-      subscription.unsubscribe();
       clearInterval(syncInterval);
     };
-  }, [navigate]);
-
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
+  }, [edit]);
 
   const handleSync = async (silent = true) => {
     if (syncing) return;
@@ -176,7 +150,7 @@ function IndexPage() {
     if (k === "cnpj") {
       finalValue = formatCNPJ(v);
     }
-    setEstab((s) => ({ ...s, [k]: finalValue }));
+    setEstab((s: Estabelecimento) => ({ ...s, [k]: finalValue }));
   };
 
   const handleCnpjBlur = async () => {
@@ -196,7 +170,7 @@ function IndexPage() {
         data.complemento
       ].filter(Boolean).join(", ");
 
-      setEstab((s) => ({
+      setEstab((s: Estabelecimento) => ({
         ...s,
         razaoSocial: data.razao_social || s.razaoSocial,
         nomeFantasia: data.nome_fantasia || data.razao_social || s.nomeFantasia,
