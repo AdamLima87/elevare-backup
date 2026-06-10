@@ -80,7 +80,7 @@ function ResultadoPage() {
 
       const r = loadRascunho();
       if (!r || !r.dados.estabelecimento.razaoSocial) {
-        navigate({ to: "/" });
+        navigate({ to: "/nova-inspecao" });
         return;
       }
       
@@ -223,7 +223,7 @@ function ResultadoPage() {
 
   const novaInspecao = () => {
     clearRascunho();
-    navigate({ to: "/" });
+    navigate({ to: "/nova-inspecao" });
   };
 
   const compartilharWhats = () => {

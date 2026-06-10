@@ -55,14 +55,14 @@ function ChecklistContent() {
       let r = loadRascunho();
       if (!r) {
         toast.error("Preencha os dados do estabelecimento para iniciar.");
-        navigate({ to: "/" });
+        navigate({ to: "/nova-inspecao" });
         return;
       }
       setInsp(r);
     } catch (e) {
       console.error("Erro ao carregar inspeção:", e);
       toast.error("Erro ao carregar dados.");
-      navigate({ to: "/" });
+      navigate({ to: "/nova-inspecao" });
     }
   }, [navigate]);
 
@@ -135,7 +135,7 @@ function ChecklistContent() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigate({ to: "/" })}
+                  onClick={() => navigate({ to: "/nova-inspecao" })}
                   className="h-7 text-xs gap-1 hover:bg-accent"
                 >
                   <ArrowRight className="h-3 w-3 rotate-180" /> Editar Identificação
