@@ -157,7 +157,7 @@ serve(async (req) => {
       })
 
       if (authError) {
-        if (authError.message.includes('already has been registered')) {
+        if (authError.message.includes('already been registered') || authError.message.includes('already registered')) {
           // If user exists, try to update profile if it's a client
           const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers()
           const user = existingUser.users.find(u => u.email === email)
