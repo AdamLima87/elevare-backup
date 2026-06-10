@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, FileText, Trash2, Mail, Edit2 } from "lucide-react";
+import { Loader2, Search, FileText, Trash2, Mail, Edit2, UserPlus } from "lucide-react";
 import { classificacao, deleteFromHistorico } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
@@ -169,6 +169,33 @@ export function AllInspections() {
       setSendingEmail(null);
     }
   };
+
+  const handleCreateClientAccess = async (insp: any) => {
+    const email = insp.dados?.estabelecimento?.respLegalEmail || insp.dados?.estabelecimento?.email;
+    const cnpj = (insp.cnpj || insp.dados?.estabelecimento?.cnpj || "").replace(/\D/g, "");
+    const nome = insp.dados?.estabelecimento?.respLegalNome || insp.estabelecimento_nome;
+
+    if (!email || !cnpj) {
+      toast.error("E-mail ou CNPJ não encontrados para gerar acesso.");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-manage-users", {
+        body: {
+          action: "create_client",
+          userData: { email, password: cnpj, nome, perfil: "cliente", cnpj }
+        }
+      });
+
+      if (error) throw error;
+      toast.success("Acesso do cliente gerado com sucesso!");
+      fetchData(); // Atualiza a lista (embora nesta tela mostre inspeções, pode ser útil se houvesse indicador)
+    } catch (error: any) {
+      console.error("Error creating client access:", error);
+      toast.error("Erro ao gerar acesso do cliente.");
+    }
+  };
   
   const handleEdit = (insp: any) => {
     // Para editar uma inspeção concluída, vamos carregar ela no rascunho
@@ -311,19 +338,30 @@ export function AllInspections() {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             {insp.status === "concluida" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleResendEmail(insp)}
-                                disabled={sendingEmail === insp.id}
-                                title="Reenviar e-mail"
-                              >
-                                {sendingEmail === insp.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Mail className="h-4 w-4" />
-                                )}
-                              </Button>
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleCreateClientAccess(insp)}
+                                  title="Gerar/Atualizar acesso do cliente"
+                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                >
+                                  <UserPlus className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleResendEmail(insp)}
+                                  disabled={sendingEmail === insp.id}
+                                  title="Reenviar e-mail"
+                                >
+                                  {sendingEmail === insp.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Mail className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </>
                             )}
                             
                             <Button
