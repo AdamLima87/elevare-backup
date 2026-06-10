@@ -329,7 +329,7 @@ export function AllInspections() {
                     const cls = insp.status === "concluida" ? classificacao(Number(insp.conformidade)) : null;
                     return (
                       <TableRow key={insp.id}>
-                        <TableCell className="font-mono text-xs font-bold">#{insp.numero_sequencial.toString().padStart(3, '0')}</TableCell>
+                        <TableCell className="font-mono text-xs font-bold">#{(insp.numero_sequencial ?? insp.numero ?? 0).toString().padStart(3, '0')}</TableCell>
                         <TableCell>
                           <div className="font-medium">{insp.estabelecimento_nome}</div>
                           <div className="text-xs text-muted-foreground">{insp.cnpj}</div>
