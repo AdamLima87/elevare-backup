@@ -115,7 +115,25 @@ export function AllInspections() {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteFromHistorico(id);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No session");
+
+      const insp = inspections.find(i => i.id === id);
+      const numero = insp?.numero_sequencial;
+
+      // Deletar do Supabase
+      const { error } = await supabase.from("inspecoes").delete().eq("id", id);
+      if (error) throw error;
+
+      // Liberar número sequencial se existir
+      if (numero) {
+        await releaseNumero(numero);
+      }
+
+      // Remover do localStorage (via helper ou direto para garantir sync)
+      const list = JSON.parse(localStorage.getItem("elevare_inspecoes") || "[]");
+      localStorage.setItem("elevare_inspecoes", JSON.stringify(list.filter((i: any) => i.id !== id)));
+
       setInspections(prev => prev.filter(i => i.id !== id));
       toast.success("Inspeção excluída com sucesso");
     } catch (error) {
