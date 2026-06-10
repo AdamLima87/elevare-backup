@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Search, FileText, Trash2, Mail, Edit2, UserPlus } from "lucide-react";
-import { classificacao, deleteFromHistorico } from "@/lib/storage";
+import { classificacao, deleteFromHistorico, releaseNumero, saveRascunho } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -115,7 +115,25 @@ export function AllInspections() {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteFromHistorico(id);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No session");
+
+      const insp = inspections.find(i => i.id === id);
+      const numero = insp?.numero_sequencial;
+
+      // Deletar do Supabase
+      const { error } = await supabase.from("inspecoes").delete().eq("id", id);
+      if (error) throw error;
+
+      // Liberar número sequencial se existir
+      if (numero) {
+        await releaseNumero(numero);
+      }
+
+      // Remover do localStorage (via helper ou direto para garantir sync)
+      const list = JSON.parse(localStorage.getItem("elevare_inspecoes") || "[]");
+      localStorage.setItem("elevare_inspecoes", JSON.stringify(list.filter((i: any) => i.id !== id)));
+
       setInspections(prev => prev.filter(i => i.id !== id));
       toast.success("Inspeção excluída com sucesso");
     } catch (error) {
@@ -205,7 +223,7 @@ export function AllInspections() {
     }
   };
   
-  const handleEdit = (insp: any) => {
+  const handleEdit = async (insp: any) => {
     // Para editar uma inspeção concluída, vamos carregar ela no rascunho
     // e mudar seu status para 'em_andamento'
     const mapped: any = {
@@ -227,8 +245,8 @@ export function AllInspections() {
       respostas: insp.respostas || {},
     };
     
-    // Salva no localStorage como rascunho atual
-    localStorage.setItem("elevare_rascunho", JSON.stringify(mapped));
+    // Salva usando o helper
+    await saveRascunho(mapped);
     
     // Navega para a primeira etapa da inspeção
     toast.info("Carregando inspeção para edição...");
@@ -311,7 +329,7 @@ export function AllInspections() {
                     const cls = insp.status === "concluida" ? classificacao(Number(insp.conformidade)) : null;
                     return (
                       <TableRow key={insp.id}>
-                        <TableCell className="font-mono text-xs font-bold">#{insp.numero_sequencial.toString().padStart(3, '0')}</TableCell>
+                        <TableCell className="font-mono text-xs font-bold">#{(insp.numero_sequencial ?? insp.numero ?? 0).toString().padStart(3, '0')}</TableCell>
                         <TableCell>
                           <div className="font-medium">{insp.estabelecimento_nome}</div>
                           <div className="text-xs text-muted-foreground">{insp.cnpj}</div>
