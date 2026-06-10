@@ -303,7 +303,7 @@ export function UserManagement() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => {
-                                const pass = user.senha_texto || "Não disponível";
+                                const pass = user.senha_texto || "Não disponível (Senha já alterada ou não registrada)";
                                 toast.info(`Senha atual: ${pass}`, { duration: 5000 });
                               }}>
                                 <Eye className="mr-2 h-4 w-4" /> Visualizar Senha
