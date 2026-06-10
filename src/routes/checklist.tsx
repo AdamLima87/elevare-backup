@@ -90,7 +90,6 @@ function ChecklistContent() {
 
       // Persist after state update is defined
       if (nextInsp) {
-        await saveRascunho(nextInsp);
         await saveToHistorico(nextInsp);
       }
     } catch (error) {
