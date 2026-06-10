@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search, FileText, Trash2, Mail } from "lucide-react";
+import { Loader2, Search, FileText, Trash2, Mail, Edit2 } from "lucide-react";
 import { classificacao, deleteFromHistorico } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
@@ -169,6 +169,35 @@ export function AllInspections() {
       setSendingEmail(null);
     }
   };
+  
+  const handleEdit = (insp: any) => {
+    // Para editar uma inspeção concluída, vamos carregar ela no rascunho
+    // e mudar seu status para 'em_andamento'
+    const mapped: any = {
+      id: insp.id,
+      numero: insp.numero,
+      status: "em_andamento",
+      estabelecimento: insp.estabelecimento_nome || "",
+      dataInicio: insp.data_inicio,
+      dataConclusao: insp.data_conclusao,
+      progresso: insp.progresso,
+      conformidade: insp.conformidade ? Number(insp.conformidade) : null,
+      dados: insp.dados || {
+        estabelecimento: { razaoSocial: "", nomeFantasia: "", cnpj: "" },
+        questionario: {},
+        funcionarios: [],
+        fotos: {}
+      },
+      respostas: insp.respostas || {},
+    };
+    
+    // Salva no localStorage como rascunho atual
+    localStorage.setItem("elevare_rascunho", JSON.stringify(mapped));
+    
+    // Navega para a primeira etapa da inspeção
+    toast.info("Carregando inspeção para edição...");
+    navigate({ to: "/" });
+  };
 
   return (
     <div className="space-y-6">
@@ -296,10 +325,22 @@ export function AllInspections() {
                                 )}
                               </Button>
                             )}
+                            
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(insp)}
+                              title="Editar inspeção"
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+
                             <Button 
                               variant="ghost" 
                               size="sm" 
                               onClick={() => navigate({ to: "/resultado", search: { id: insp.id, readonly: true } })}
+                              title="Ver resultado"
                             >
                               <FileText className="h-4 w-4" />
                             </Button>
