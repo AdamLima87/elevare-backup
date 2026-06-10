@@ -151,8 +151,16 @@ export function UserManagement() {
     );
   }, [users, searchTerm]);
 
+  const { admins, consultants, clients } = useMemo(() => {
+    return {
+      admins: filteredUsers.filter(u => u.perfil === "admin"),
+      consultants: filteredUsers.filter(u => u.perfil === "consultor"),
+      clients: filteredUsers.filter(u => u.perfil === "cliente")
+    };
+  }, [filteredUsers]);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
