@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background relative">
       <Sidebar 
         profile={profile} 
         onLogout={handleLogout} 
@@ -58,8 +58,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       
       <main 
         className={cn(
-          "flex-1 transition-[margin-left] duration-200 ease-in-out min-w-0",
-          isMobile ? "mt-16 ml-0" : (isExpanded ? "md:ml-[220px]" : "md:ml-[64px]")
+          "flex-1 min-w-0 transition-all duration-200",
+          isMobile ? "pt-16 px-4" : "ml-[64px]"
         )}
       >
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -71,5 +71,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         </footer>
       </main>
     </div>
+
   );
 }
