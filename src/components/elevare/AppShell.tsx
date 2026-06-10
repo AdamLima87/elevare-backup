@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-background relative flex flex-col">
       <Sidebar 
         profile={profile} 
         onLogout={handleLogout} 
@@ -58,15 +58,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       
       <main 
         className={cn(
-          "flex-1 min-w-0 transition-all duration-200",
+          "flex-1 min-w-0 transition-all duration-200 flex flex-col",
           isMobile ? "pt-16 px-4" : "ml-[64px]"
         )}
       >
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex-1">
           {children}
         </div>
         
-        <footer className="py-8 text-center text-[10px] text-muted-foreground uppercase tracking-widest border-t mt-12 mx-8">
+        <footer className="fixed bottom-0 left-0 right-0 py-8 text-center text-[10px] text-muted-foreground uppercase tracking-widest border-t bg-background">
           Elevare Consultoria · Segurança dos Alimentos · RDC 216 & 275 ANVISA
         </footer>
       </main>
