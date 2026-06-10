@@ -229,7 +229,7 @@ export function AllInspections() {
     
     // Navega para a primeira etapa da inspeção
     toast.info("Carregando inspeção para edição...");
-    navigate({ to: "/" });
+    navigate({ to: "/nova-inspecao" });
   };
 
   return (
