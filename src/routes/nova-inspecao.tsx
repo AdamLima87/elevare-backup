@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AppShell } from "@/components/elevare/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
