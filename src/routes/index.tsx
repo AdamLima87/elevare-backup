@@ -368,7 +368,7 @@ function IndexPage() {
 
       <div className="mt-6 flex justify-end">
         <Button size="lg" onClick={iniciar} className="gap-2">
-          Iniciar Checklist <ArrowRight className="h-4 w-4" />
+          {rascunho ? "Salvar e Continuar" : "Iniciar Checklist"} <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
     </AppShell>
