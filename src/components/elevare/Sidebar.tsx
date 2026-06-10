@@ -158,15 +158,29 @@ export function Sidebar({ profile, onLogout, isExpanded, setIsExpanded }: Sideba
   }
 
   return (
-    <aside 
-      className={cn(
-        "fixed left-0 top-0 bottom-0 bg-[#1a4d2e] transition-[width] duration-200 ease-in-out z-40 overflow-hidden border-r border-white/5",
-        isExpanded ? "w-[220px]" : "w-[64px]"
+    <>
+      {/* Overlay for mobile/desktop expanded state if needed, though user only asked for mobile specifically */}
+      {isMobile && (
+        <div 
+          className={cn(
+            "fixed inset-0 bg-black/30 z-[45] transition-opacity duration-200 pointer-events-none opacity-0",
+            isExpanded && "opacity-100 pointer-events-auto"
+          )}
+          onClick={() => setIsExpanded(false)}
+        />
       )}
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
-    >
-      <SidebarContent />
-    </aside>
+      
+      <aside 
+        className={cn(
+          "fixed left-0 top-0 bottom-0 bg-[#1a4d2e] transition-[width] duration-200 ease-in-out z-50 overflow-hidden border-r border-white/5 shadow-xl",
+          isExpanded ? "w-[220px]" : "w-[64px]"
+        )}
+        onMouseEnter={() => !isMobile && setIsExpanded(true)}
+        onMouseLeave={() => !isMobile && setIsExpanded(false)}
+      >
+        <SidebarContent />
+      </aside>
+    </>
   );
 }
+
