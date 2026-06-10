@@ -106,7 +106,7 @@ export function AllInspections() {
     return (
       insp.estabelecimento_nome?.toLowerCase().includes(searchLower) ||
       insp.cnpj?.includes(searchLower) ||
-      insp.numero?.toString().includes(searchLower)
+      insp.numero_sequencial?.toString().includes(searchLower)
     );
   });
 
@@ -207,7 +207,7 @@ export function AllInspections() {
     // e mudar seu status para 'em_andamento'
     const mapped: any = {
       id: insp.id,
-      numero: insp.numero,
+      numero_sequencial: insp.numero_sequencial,
       status: "em_andamento",
       estabelecimento: insp.estabelecimento_nome || "",
       dataInicio: insp.data_inicio,
@@ -308,7 +308,7 @@ export function AllInspections() {
                     const cls = insp.status === "concluida" ? classificacao(Number(insp.conformidade)) : null;
                     return (
                       <TableRow key={insp.id}>
-                        <TableCell className="font-mono text-xs font-bold">#{insp.numero.toString().padStart(3, '0')}</TableCell>
+                        <TableCell className="font-mono text-xs font-bold">#{insp.numero_sequencial.toString().padStart(3, '0')}</TableCell>
                         <TableCell>
                           <div className="font-medium">{insp.estabelecimento_nome}</div>
                           <div className="text-xs text-muted-foreground">{insp.cnpj}</div>

@@ -49,7 +49,7 @@ export interface QuestionarioEstab {
 
 export interface Inspecao {
   id: string; 
-  numero: number; 
+  numero_sequencial: number; 
   status: "em_andamento" | "concluida";
   estabelecimento: string; 
   dataInicio: string;
@@ -164,7 +164,7 @@ export async function createNewInspecao(): Promise<Inspecao> {
   const num = await getNextNumero();
   return {
     id: crypto.randomUUID(),
-    numero: num,
+    numero_sequencial: num,
     status: "em_andamento",
     estabelecimento: "",
     dataInicio: new Date().toISOString(),
@@ -195,29 +195,9 @@ export async function saveRascunho(insp: Inspecao) {
   if (typeof localStorage === "undefined") return;
   localStorage.setItem(RASCUNHO_KEY, JSON.stringify(insp));
   
-  // Sync to Cloud if authenticated
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.user) {
-    try {
-      const { error } = await supabase.from("inspecoes").upsert({
-        id: insp.id,
-        consultor_id: session.user.id,
-        numero: insp.numero,
-        status: insp.status,
-        estabelecimento_nome: insp.estabelecimento,
-        cnpj: insp.dados?.estabelecimento?.cnpj?.replace(/\D/g, "") || null,
-        data_inicio: insp.dataInicio,
-        data_conclusao: insp.dataConclusao,
-        progresso: insp.progresso,
-        conformidade: insp.conformidade,
-        dados: insp.dados as any,
-        respostas: insp.respostas as any,
-      });
-      if (error) throw error;
-    } catch (err) {
-      console.error("Failed to sync rascunho to Cloud:", err);
-    }
-  }
+  // In the current architecture, saveToHistorico handles cloud sync
+  // to avoid duplication and inconsistencies.
+  // saveRascunho is now strictly for local persistence of the current active session.
 }
 
 export async function clearRascunho() {
@@ -227,6 +207,34 @@ export async function clearRascunho() {
   
   // Note: We don't necessarily want to delete from Cloud when clearing local draft
   // but if the draft ID is deleted from history, that's handled in deleteFromHistorico
+}
+
+export async function loadHistoricoFromCloud(): Promise<Inspecao[]> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return [];
+
+  const { data, error } = await supabase
+    .from("inspecoes")
+    .select("*")
+    .order("data_inicio", { ascending: false });
+
+  if (error || !data) {
+    console.error("Erro ao buscar histórico do cloud:", error);
+    return [];
+  }
+
+  return data.map(item => ({
+    id: item.id,
+    numero_sequencial: item.numero_sequencial as number,
+    status: item.status as any,
+    estabelecimento: item.estabelecimento_nome || "",
+    dataInicio: item.data_inicio,
+    dataConclusao: item.data_conclusao,
+    progresso: item.progresso,
+    conformidade: item.conformidade ? Number(item.conformidade) : null,
+    dados: item.dados as any,
+    respostas: item.respostas as any,
+  }));
 }
 
 export function loadHistorico(): Inspecao[] {
@@ -274,7 +282,7 @@ export async function saveToHistorico(insp: Inspecao) {
       const { error } = await supabase.from("inspecoes").upsert({
         id: insp.id,
         consultor_id: session.user.id,
-        numero: insp.numero,
+        numero_sequencial: insp.numero_sequencial,
         status: insp.status,
         estabelecimento_nome: insp.estabelecimento,
         cnpj: cleanCnpj,
@@ -324,7 +332,7 @@ export async function deleteFromHistorico(id: string) {
   const list = loadHistorico();
   const item = list.find((i) => i.id === id);
   if (item) {
-    releaseNumero(item.numero);
+    releaseNumero(item.numero_sequencial);
   }
   const rascunho = loadRascunho();
   if (rascunho && rascunho.id === id) {

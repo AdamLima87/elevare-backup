@@ -145,7 +145,7 @@ export type Database = {
           data_inicio: string
           estabelecimento_nome: string | null
           id: string
-          numero: number
+          numero_sequencial: number
           progresso: number
           respostas: Json
           status: string
@@ -161,7 +161,7 @@ export type Database = {
           data_inicio?: string
           estabelecimento_nome?: string | null
           id?: string
-          numero: number
+          numero_sequencial: number
           progresso?: number
           respostas?: Json
           status?: string
@@ -177,7 +177,7 @@ export type Database = {
           data_inicio?: string
           estabelecimento_nome?: string | null
           id?: string
-          numero?: number
+          numero_sequencial?: number
           progresso?: number
           respostas?: Json
           status?: string
