@@ -223,7 +223,7 @@ function ResultadoPage() {
 
   const novaInspecao = () => {
     clearRascunho();
-    navigate({ to: "/" });
+    navigate({ to: "/nova-inspecao" });
   };
 
   const compartilharWhats = () => {
