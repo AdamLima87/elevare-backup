@@ -131,7 +131,17 @@ function ChecklistContent() {
         <div className="mb-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center justify-between sm:justify-start sm:gap-4 mb-1">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Inspeção</div>
+              <div className="flex items-center gap-2">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Inspeção</div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate({ to: "/" })}
+                  className="h-7 text-xs gap-1 hover:bg-accent"
+                >
+                  <ArrowRight className="h-3 w-3 rotate-180" /> Editar Identificação
+                </Button>
+              </div>
               <SyncStatus />
             </div>
             <h1 className="text-xl font-semibold">{insp.estabelecimento || insp.dados?.estabelecimento?.nomeFantasia || "Sem nome"}</h1>
