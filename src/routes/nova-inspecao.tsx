@@ -150,7 +150,7 @@ function IndexPage() {
     if (k === "cnpj") {
       finalValue = formatCNPJ(v);
     }
-    setEstab((s) => ({ ...s, [k]: finalValue }));
+    setEstab((s: Estabelecimento) => ({ ...s, [k]: finalValue }));
   };
 
   const handleCnpjBlur = async () => {
