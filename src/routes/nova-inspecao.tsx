@@ -22,10 +22,15 @@ import { ArrowRight, ClipboardCheck, Loader2, LogIn, LogOut, User, Cloud, Refres
 import { SyncStatus } from "@/components/elevare/SyncStatus";
 
 export const Route = createFileRoute("/nova-inspecao")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      edit: Boolean(search.edit),
+    };
+  },
   head: () => ({
     meta: [
-      { title: "Checklist Elevare — Diagnóstico Sanitário" },
-      { name: "description", content: "Ferramenta de diagnóstico sanitário Elevare baseada nas RDC 275/2002 e RDC 216/2004 da ANVISA." },
+      { title: "Nova Inspeção · Elevare" },
+      { name: "description", content: "Inicie um novo diagnóstico sanitário." },
     ],
   }),
   component: IndexPage,
@@ -41,12 +46,19 @@ function IndexPage() {
   const [syncing, setSyncing] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
+  const { edit } = Route.useSearch();
+
   useEffect(() => {
-    const r = loadRascunho();
-    if (r) {
-      setRascunho(r);
-      if (r.dados?.estabelecimento) {
-        setEstab(r.dados.estabelecimento);
+    if (!edit) {
+      setEstab(emptyEstabelecimento());
+      setRascunho(null);
+    } else {
+      const r = loadRascunho();
+      if (r) {
+        setRascunho(r);
+        if (r.dados?.estabelecimento) {
+          setEstab(r.dados.estabelecimento);
+        }
       }
     }
 
