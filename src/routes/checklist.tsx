@@ -135,7 +135,7 @@ function ChecklistContent() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigate({ to: "/" })}
+                  onClick={() => navigate({ to: "/nova-inspecao" })}
                   className="h-7 text-xs gap-1 hover:bg-accent"
                 >
                   <ArrowRight className="h-3 w-3 rotate-180" /> Editar Identificação
