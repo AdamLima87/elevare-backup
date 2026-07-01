@@ -96,7 +96,7 @@ function IndexPage() {
       // Use profile from state or re-fetch session if needed, 
       // but interval should only run if user is logged in
       handleSync(true); // Always silent on interval
-    }, 60000);
+    }, 300000); // 5 minutos (era 60s) — reduz consumo passivo de compute
 
     return () => {
       clearInterval(syncInterval);
