@@ -49,6 +49,12 @@ export interface QuestionarioEstab {
   alteracoesDesejadas: string;
 }
 
+export interface AcaoCorretiva {
+  texto: string;
+  /** ISO date (YYYY-MM-DD) */
+  prazo: string;
+}
+
 export interface Inspecao {
   id: string;
   numero_sequencial: number;
@@ -63,6 +69,8 @@ export interface Inspecao {
     questionario: QuestionarioEstab;
     funcionarios: Funcionario[];
     fotos: Record<string, string[]>;
+    /** Corrective action plan per non-conforming item, keyed by checklist item id. */
+    planoAcao?: Record<string, AcaoCorretiva>;
   };
   respostas: Record<string, Resposta>;
   /** Last `updated_at` this client saw from the cloud row, used to detect concurrent edits. Local bookkeeping only, not a DB column. */
