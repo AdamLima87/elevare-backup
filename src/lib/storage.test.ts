@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
+vi.mock("@/hooks/useSyncStore", () => ({ useSyncStore: { getState: () => ({ addConflict: () => {} }) } }));
 
 import { calcularPercentual, classificacao } from "./storage";
 
