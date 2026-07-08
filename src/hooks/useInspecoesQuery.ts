@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface InspecoesFilters {
   status?: "concluida" | "em_andamento";
   consultorId?: string | null;
+  cnpj?: string | null;
   dateStart?: string;
   dateEnd?: string;
   dateField?: "data_conclusao" | "data_inicio";
@@ -18,6 +19,7 @@ function applyFilters(query: any, filters: InspecoesFilters) {
 
   if (filters.status) query = query.eq("status", filters.status);
   if (filters.consultorId) query = query.eq("consultor_id", filters.consultorId);
+  if (filters.cnpj) query = query.eq("cnpj", filters.cnpj);
   if (filters.dateStart) query = query.gte(dateField, filters.dateStart);
   if (filters.dateEnd) query = query.lte(dateField, `${filters.dateEnd}T23:59:59`);
 

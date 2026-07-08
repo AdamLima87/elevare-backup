@@ -3,25 +3,22 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/elevare/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
   calcularPercentual,
   classificacao,
   clearRascunho,
   loadRascunho,
   saveToHistorico,
+  type AcaoCorretiva,
   type Inspecao,
 } from "@/lib/storage";
+import { ensurePlanoAcao } from "@/lib/plano-acao";
 import { checklistSections } from "@/lib/checklist-data";
 import { FileDown, MessageCircle, Mail, Save, RotateCcw, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,7 +27,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/resultado")({
   head: () => ({
-    meta: [{ title: "Resultado · Elevare" }, { name: "description", content: "Resultado da inspeção sanitária com pontuação, gráfico e não conformidades." }],
+    meta: [
+      { title: "Resultado · Elevare" },
+      {
+        name: "description",
+        content: "Resultado da inspeção sanitária com pontuação, gráfico e não conformidades.",
+      },
+    ],
   }),
   component: ResultadoPage,
 });
@@ -40,7 +43,7 @@ function ResultadoPage() {
   const search = useSearch({ from: "/resultado" }) as { id?: string; readonly?: boolean };
   const [insp, setInsp] = useState<Inspecao | null>(null);
   const [loading, setLoading] = useState(false);
-
+  const [planoAcao, setPlanoAcao] = useState<Record<string, AcaoCorretiva>>({});
 
   useEffect(() => {
     async function loadData() {
@@ -54,7 +57,7 @@ function ResultadoPage() {
             .single();
 
           if (error) throw error;
-          
+
           if (data) {
             const mapped: Inspecao = {
               id: data.id,
@@ -69,6 +72,9 @@ function ResultadoPage() {
               respostas: data.respostas as any,
             };
             setInsp(mapped);
+            setPlanoAcao(
+              ensurePlanoAcao(mapped.respostas, mapped.dados?.planoAcao, mapped.dataConclusao),
+            );
           }
         } catch (err) {
           toast.error("Erro ao carregar inspeção");
@@ -83,22 +89,24 @@ function ResultadoPage() {
         navigate({ to: "/nova-inspecao" });
         return;
       }
-      
+
       // The "concluida" status will only be set when the user clicks "Salvar"
       const score = calcularPercentual(r.respostas);
-      const finalInsp: Inspecao = { 
-        ...r, 
-        status: r.status, 
+      const finalInsp: Inspecao = {
+        ...r,
+        status: r.status,
         conformidade: score.percentual,
-        dataConclusao: r.dataConclusao || new Date().toISOString()
+        dataConclusao: r.dataConclusao || new Date().toISOString(),
       };
-      
+
       setInsp(finalInsp);
+      setPlanoAcao(
+        ensurePlanoAcao(finalInsp.respostas, finalInsp.dados?.planoAcao, finalInsp.dataConclusao),
+      );
     }
-    
+
     loadData();
   }, [navigate, search.id, search.readonly]);
-
 
   const score = useMemo(() => (insp ? calcularPercentual(insp.respostas) : null), [insp]);
   const cls = score ? classificacao(score.percentual) : null;
@@ -138,7 +146,6 @@ function ResultadoPage() {
 
   if (!insp || !score || !cls) return null;
 
-
   const finalInsp = insp;
 
   const salvar = async () => {
@@ -146,17 +153,21 @@ function ResultadoPage() {
     try {
       const updatedInsp: Inspecao = {
         ...finalInsp,
-        status: "concluida"
+        status: "concluida",
+        dados: { ...finalInsp.dados, planoAcao },
       };
-      
+
       await saveToHistorico(updatedInsp);
       setInsp(updatedInsp);
-      
+
       // Enviar e-mail automático e garantir acesso do cliente
-      const email = updatedInsp.dados?.estabelecimento?.respLegalEmail || updatedInsp.dados?.estabelecimento?.email;
+      const email =
+        updatedInsp.dados?.estabelecimento?.respLegalEmail ||
+        updatedInsp.dados?.estabelecimento?.email;
       const cnpj = updatedInsp.dados?.estabelecimento?.cnpj?.replace(/\D/g, "") || "";
-      const nomeLegal = updatedInsp.dados?.estabelecimento?.respLegalNome || updatedInsp.estabelecimento;
-      
+      const nomeLegal =
+        updatedInsp.dados?.estabelecimento?.respLegalNome || updatedInsp.estabelecimento;
+
       console.log("Iniciando processos pós-conclusão para:", email);
 
       if (email && cnpj) {
@@ -170,9 +181,9 @@ function ResultadoPage() {
                 password: cnpj,
                 nome: nomeLegal,
                 perfil: "cliente",
-                cnpj
-              }
-            }
+                cnpj,
+              },
+            },
           });
 
           if (clientResponse.error) {
@@ -182,11 +193,11 @@ function ResultadoPage() {
           }
 
           // 2. Enviar e-mail
-          const response = await fetch('/lovable/email/transactional/send', {
-            method: 'POST',
+          const response = await fetch("/lovable/email/transactional/send", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
             },
             body: JSON.stringify({
               templateName: "inspection",
@@ -199,20 +210,18 @@ function ResultadoPage() {
                 conformidade: updatedInsp.conformidade,
                 classificacaoLabel: cls.label,
                 classificacaoTone: cls.tone,
-                link_resultado: `${window.location.origin}/meu-resultado`
-              }
-            })
+                link_resultado: `${window.location.origin}/meu-resultado`,
+              },
+            }),
           });
-          
-          if (!response.ok) throw new Error('Falha ao enviar e-mail');
+
+          if (!response.ok) throw new Error("Falha ao enviar e-mail");
           toast.success(`Relatório enviado por e-mail para ${email}`);
         } catch (emailErr) {
           console.error("Erro nos processos pós-conclusão:", emailErr);
           toast.error("Não foi possível processar todos os envios automáticos.");
         }
       }
-      
-      
     } catch (err) {
       console.error("Erro ao salvar:", err);
       toast.error("Erro ao salvar inspeção.");
@@ -241,7 +250,7 @@ function ResultadoPage() {
 
   const baixarPDF = () => {
     try {
-      gerarPDF(finalInsp);
+      gerarPDF({ ...finalInsp, dados: { ...finalInsp.dados, planoAcao } });
     } catch (e) {
       console.error(e);
       toast.error("Não foi possível gerar o PDF.");
@@ -252,17 +261,30 @@ function ResultadoPage() {
     <AppShell>
       <Toaster richColors position="top-center" />
       <div className="mb-4">
-        <div className="text-xs uppercase tracking-wider text-muted-foreground">Resultado da Inspeção</div>
+        <div className="text-xs uppercase tracking-wider text-muted-foreground">
+          Resultado da Inspeção
+        </div>
         <h1 className="text-2xl font-semibold">{insp.estabelecimento}</h1>
         <p className="text-sm text-muted-foreground">{insp.dados.estabelecimento.razaoSocial}</p>
       </div>
 
-      <Card className={cn("border-2", cls.tone === "success" && "border-success/40", cls.tone === "warning" && "border-warning/50", cls.tone === "destructive" && "border-destructive/40")}>
+      <Card
+        className={cn(
+          "border-2",
+          cls.tone === "success" && "border-success/40",
+          cls.tone === "warning" && "border-warning/50",
+          cls.tone === "destructive" && "border-destructive/40",
+        )}
+      >
         <CardContent className="p-6">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Pontuação geral</div>
-              <div className="mt-1 text-5xl font-bold tracking-tight">{score.percentual.toFixed(2)}%</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">
+                Pontuação geral
+              </div>
+              <div className="mt-1 text-5xl font-bold tracking-tight">
+                {score.percentual.toFixed(2)}%
+              </div>
               <div className="mt-1 text-sm text-muted-foreground">
                 {score.sim} conformes · {score.nao} não conformes · {score.na} não se aplica
               </div>
@@ -284,19 +306,28 @@ function ResultadoPage() {
 
       {!search.readonly && (
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Button onClick={baixarPDF} className="gap-1.5"><FileDown className="h-4 w-4" /> PDF</Button>
-          <Button onClick={compartilharWhats} variant="secondary" className="gap-1.5"><MessageCircle className="h-4 w-4" /> WhatsApp</Button>
-          <Button onClick={enviarEmail} variant="secondary" className="gap-1.5"><Mail className="h-4 w-4" /> E-mail</Button>
-          <Button onClick={salvar} variant="outline" className="gap-1.5"><Save className="h-4 w-4" /> Salvar</Button>
-        </div>
-      )}
-      
-      {search.readonly && (
-        <div className="mt-4 flex gap-2">
-          <Button onClick={baixarPDF} className="gap-1.5"><FileDown className="h-4 w-4" /> Baixar PDF</Button>
+          <Button onClick={baixarPDF} className="gap-1.5">
+            <FileDown className="h-4 w-4" /> PDF
+          </Button>
+          <Button onClick={compartilharWhats} variant="secondary" className="gap-1.5">
+            <MessageCircle className="h-4 w-4" /> WhatsApp
+          </Button>
+          <Button onClick={enviarEmail} variant="secondary" className="gap-1.5">
+            <Mail className="h-4 w-4" /> E-mail
+          </Button>
+          <Button onClick={salvar} variant="outline" className="gap-1.5">
+            <Save className="h-4 w-4" /> Salvar
+          </Button>
         </div>
       )}
 
+      {search.readonly && (
+        <div className="mt-4 flex gap-2">
+          <Button onClick={baixarPDF} className="gap-1.5">
+            <FileDown className="h-4 w-4" /> Baixar PDF
+          </Button>
+        </div>
+      )}
 
       <Card className="mt-4">
         <CardHeader>
@@ -307,7 +338,13 @@ function ResultadoPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 60, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="secao" angle={-35} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+                <XAxis
+                  dataKey="secao"
+                  angle={-35}
+                  textAnchor="end"
+                  interval={0}
+                  tick={{ fontSize: 11 }}
+                />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
                 <Tooltip formatter={(v: number) => `${v}%`} />
                 <Bar dataKey="pct" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
@@ -325,13 +362,73 @@ function ResultadoPage() {
           {naoConformidades.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhuma não conformidade identificada.</p>
           ) : (
-            <ul className="space-y-2">
-              {naoConformidades.map((nc) => (
-                <li key={nc.id} className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-destructive">{nc.secao}</div>
-                  <div className="mt-1"><span className="font-mono text-xs">{nc.id}.</span> {nc.text}</div>
-                </li>
-              ))}
+            <ul className="space-y-3">
+              {naoConformidades.map((nc) => {
+                const acao = planoAcao[nc.id];
+                return (
+                  <li
+                    key={nc.id}
+                    className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm"
+                  >
+                    <div className="text-xs font-semibold uppercase tracking-wide text-destructive">
+                      {nc.secao}
+                    </div>
+                    <div className="mt-1">
+                      <span className="font-mono text-xs">{nc.id}.</span> {nc.text}
+                    </div>
+
+                    {!search.readonly ? (
+                      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+                        <div className="space-y-1">
+                          <Label htmlFor={`acao-texto-${nc.id}`} className="text-[11px]">
+                            Plano de ação
+                          </Label>
+                          <Textarea
+                            id={`acao-texto-${nc.id}`}
+                            value={acao?.texto ?? ""}
+                            onChange={(e) =>
+                              setPlanoAcao((prev) => ({
+                                ...prev,
+                                [nc.id]: { texto: e.target.value, prazo: prev[nc.id]?.prazo ?? "" },
+                              }))
+                            }
+                            className="min-h-16 bg-background text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor={`acao-prazo-${nc.id}`} className="text-[11px]">
+                            Prazo
+                          </Label>
+                          <Input
+                            id={`acao-prazo-${nc.id}`}
+                            type="date"
+                            value={acao?.prazo ?? ""}
+                            onChange={(e) =>
+                              setPlanoAcao((prev) => ({
+                                ...prev,
+                                [nc.id]: { texto: prev[nc.id]?.texto ?? "", prazo: e.target.value },
+                              }))
+                            }
+                            className="bg-background"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      acao && (
+                        <div className="mt-2 border-t border-destructive/20 pt-2 text-xs">
+                          <span className="font-semibold">Plano de ação:</span> {acao.texto}
+                          {acao.prazo && (
+                            <span className="ml-1 text-muted-foreground">
+                              (prazo:{" "}
+                              {new Date(acao.prazo + "T00:00:00").toLocaleDateString("pt-BR")})
+                            </span>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>
@@ -339,11 +436,14 @@ function ResultadoPage() {
 
       {!search.readonly && (
         <div className="mt-6 flex flex-wrap justify-end gap-2">
-          <Button variant="ghost" onClick={() => navigate({ to: "/checklist" })}>Voltar ao checklist</Button>
-          <Button onClick={novaInspecao} className="gap-1.5"><RotateCcw className="h-4 w-4" /> Nova inspeção</Button>
+          <Button variant="ghost" onClick={() => navigate({ to: "/checklist" })}>
+            Voltar ao checklist
+          </Button>
+          <Button onClick={novaInspecao} className="gap-1.5">
+            <RotateCcw className="h-4 w-4" /> Nova inspeção
+          </Button>
         </div>
       )}
-
     </AppShell>
   );
 }

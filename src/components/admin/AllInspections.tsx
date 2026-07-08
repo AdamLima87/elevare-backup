@@ -28,6 +28,7 @@ import {
   Mail,
   Edit2,
   UserPlus,
+  TrendingUp,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -356,6 +357,19 @@ export function AllInspections() {
                             >
                               <FileText className="h-4 w-4" />
                             </Button>
+
+                            {insp.cnpj && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  navigate({ to: "/estabelecimento", search: { cnpj: insp.cnpj } })
+                                }
+                                title="Ver histórico do estabelecimento"
+                              >
+                                <TrendingUp className="h-4 w-4" />
+                              </Button>
+                            )}
 
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
