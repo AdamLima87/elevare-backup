@@ -29,6 +29,7 @@ import {
   FilterX,
   ClipboardCheck,
   TrendingDown,
+  TrendingUp,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -329,6 +330,22 @@ function RelatoriosPage() {
                                 >
                                   <FileText className="h-4 w-4" />
                                 </Button>
+                                {insp.cnpj && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      navigate({
+                                        to: "/estabelecimento",
+                                        search: { cnpj: insp.cnpj },
+                                      })
+                                    }
+                                    title="Ver histórico do estabelecimento"
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <TrendingUp className="h-4 w-4" />
+                                  </Button>
+                                )}
                                 <Button
                                   variant="ghost"
                                   size="sm"
